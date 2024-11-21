@@ -51,7 +51,7 @@ class RobotCameraConfig:
     def initialize(self):
         try:
             logger.info("Initializing robot camera...")
-            ChannelFactoryInitialize(0)
+            #ChannelFactoryInitialize(0)
             self.client = VideoClient()
             self.client.SetTimeout(3.0)
             self.client.Init()
@@ -88,7 +88,7 @@ class RobotControl:
     def initialize(self):
         try:
             logger.info("Initializing robot control...")
-            ChannelFactoryInitialize(0, self.network_interface)
+            #ChannelFactoryInitialize(0, self.network_interface)
             self.client = SportClient()
             self.client.SetTimeout(10.0)
             self.client.Init()
@@ -323,6 +323,14 @@ def init_db():
 
 if __name__ == '__main__':
     init_db()
+
+    try:
+        # Reemplaza 'eth0' con tu interfaz de red si es necesario
+        ChannelFactoryInitialize(0, 'eth0')
+        logger.info("ChannelFactory initialized successfully.")
+    except Exception as e:
+        logger.error(f"ChannelFactory initialization error: {str(e)}")
+        sys.exit(1)
 
     # Initialize robot camera
     camera_config = RobotCameraConfig()
