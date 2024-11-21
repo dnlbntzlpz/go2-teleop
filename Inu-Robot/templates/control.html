@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot Control Panel</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        /* Tu estilo CSS existente */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background-color: #0B0B2A;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #B347FF, #47F3FF);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 16px;
+        }
+
+        .button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .home-button {
+            background: linear-gradient(90deg, #B347FF, #47F3FF);
+            color: white;
+        }
+
+        .logout-button {
+            background: #dc3545;
+            color: white;
+        }
+
+        .control-panel {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 24px;
+            margin-top: 40px;
+        }
+
+        .video-feed {
+            background-color: #13132B;
+            aspect-ratio: 16/9;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            /* Add hardware acceleration */
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            perspective: 1000;
+        }
+
+        .video-feed img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            /* Optimize image rendering */
+            image-rendering: optimizeSpeed;
+            /* Add hardware acceleration */
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            will-change: transform;
+        }
+
+        .video-stats {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(19, 19, 43, 0.8);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            gap: 16px;
+            color: #94a3b8;
+            z-index: 10;
+            /* Add hardware acceleration */
+            transform: translateZ(0);
+        }
+
+        .controls-section {
+            background: #13132B;
+            padding: 32px;
+            border-radius: 20px;
+        }
+
+        .controls-section h2 {
+            font-size: 1.8rem;
+            margin-bottom: 24px;
+            color: #B347FF;
+            font-weight: 600;
+        }
+
+        .joystick-status {
+            background: #1B1B3A;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            color: #94a3b8;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #dc3545;
+        }
+
+        .joystick-data {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .data-label {
+            margin-bottom: 8px;
+        }
+
+        .data-value {
+            font-family: monospace;
+            margin-bottom: 12px;
+            word-break: break-all;
+        }
+
+        .operator-info {
+            background: #1B1B3A;
+            padding: 20px;
+            border-radius: 12px;
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+
+        @media (max-width: 1024px) {
+            .control-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Robot Teleoperation System</h1>
+            <div class="nav-buttons">
+                <a href="{{ url_for('index') }}" class="button home-button">Home</a>
+                <a href="{{ url_for('logout') }}" class="button logout-button">Logout</a>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div class="video-feed">
+                <img id="videoFeed" src="data:image/jpeg;base64,/9j/4AAQSkZJRg==" alt="Video stream">
+                <div class="video-stats">
+                    <span>Latency: <span id="latency">0</span>ms</span>
+                    <span>FPS: <span id="fps">0</span></span>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <h2>Control Status</h2>
+                <div class="joystick-status">
+                    <div class="connection-status">
+                        <div class="status-indicator" id="joystickIndicator"></div>
+                        <span id="joystickStatus">No Gamepad Detected</span>
+                    </div>
+
+                    <div class="joystick-data">
+                        <div class="data-label">Joystick Data:</div>
+                        <div class="data-value" id="axisValues">Axes: Waiting for data...</div>
+                        <div class="data-value" id="buttonValues">Buttons: Waiting for data...</div>
+                    </div>
+                </div>
+
+                <div class="operator-info">
+                    Operator: {{ current_user.username }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Socket.IO initialization and optimized video feed handling
+        const socket = io({
+            transports: ['websocket'], // Force WebSocket transport
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 5000,
+            timeout: 20000
+        });
+
+        const videoFeed = document.getElementById('videoFeed');
+        const latencySpan = document.getElementById('latency');
+        const fpsSpan = document.getElementById('fps');
+
+        let lastFrameTime = performance.now();
+        let frameCount = 0;
+        let lastFpsUpdate = performance.now();
+        let pendingFrame = false;
+
+        // Create an image buffer to prevent tearing
+        const bufferImage = new Image();
+        bufferImage.onload = function () {
+            videoFeed.src = bufferImage.src;
+            pendingFrame = false;
+        };
+
+        socket.on('frame', (data) => {
+            // Skip frame if we're still processing the previous one
+            if (pendingFrame) {
+                return;
+            }
+
+            const currentTime = performance.now();
+
+            // Throttle frame processing
+            if (currentTime - lastFrameTime < 66.67) { // Cap at ~15 FPS
+                return;
+            }
+
+            pendingFrame = true;
+            bufferImage.src = `data:image/jpeg;base64,${data.data}`;
+
+            // Calculate and update latency (with smoothing)
+            const latency = Math.round((currentTime - lastFrameTime) * 0.8 +
+                parseInt(latencySpan.textContent) * 0.2);
+            latencySpan.textContent = latency;
+
+            // Calculate FPS with smoothing
+            frameCount++;
+            if (currentTime - lastFpsUpdate >= 1000) {
+                const fps = Math.round(frameCount * 1000 / (currentTime - lastFpsUpdate));
+                // Smooth FPS display
+                const currentFps = parseInt(fpsSpan.textContent) || 0;
+                fpsSpan.textContent = Math.round(fps * 0.3 + currentFps * 0.7);
+                frameCount = 0;
+                lastFpsUpdate = currentTime;
+            }
+
+            lastFrameTime = currentTime;
+        });
+
+        // Optimize socket connection
+        socket.on('connect_error', (error) => {
+            console.log('Connection Error:', error);
+            // Implement exponential backoff
+            socket.io.opts.reconnectionDelay *= 2;
+        });
+
+        socket.on('connect', () => {
+            console.log('Connected to server');
+            socket.io.opts.reconnectionDelay = 1000; // Reset reconnection delay
+        });
+
+        // Optional: Add connection status indicator
+        const connectionStatus = document.createElement('span');
+        connectionStatus.style.marginLeft = '10px';
+        document.querySelector('.video-stats').appendChild(connectionStatus);
+
+        socket.on('connect', () => {
+            connectionStatus.textContent = '🟢 Connected';
+        });
+
+        socket.on('disconnect', () => {
+            connectionStatus.textContent = '🔴 Disconnected';
+        });
+
+        // Gamepad handling
+        let gamepadInterval;
+        const indicator = document.getElementById('joystickIndicator');
+        const statusText = document.getElementById('joystickStatus');
+        const axisValues = document.getElementById('axisValues');
+        const buttonValues = document.getElementById('buttonValues');
+
+        let buttonStates = {};
+        const max_speed = 0.3; // Velocidad máxima
+        const deadzone = 0.3;
+
+        function applyDeadzone(value, deadzone) {
+            return Math.abs(value) < deadzone ? 0 : value;
+        }
+
+        function updateGamepadDisplay(gamepad) {
+            if (gamepad) {
+                statusText.textContent = `Connected: ${gamepad.id}`;
+                indicator.style.backgroundColor = '#28a745';
+
+                const axes = Array.from(gamepad.axes).map(axis => axis.toFixed(2));
+                axisValues.textContent = `Axes:\n[${axes.join(',')}]`;
+
+                const buttons = Array.from(gamepad.buttons).map(button => button.pressed ? 1 : 0);
+                buttonValues.textContent = `Buttons: [${buttons.join(',')}]`;
+
+                // Send gamepad inputs to server
+                // Map axes to robot control inputs
+                const x_axis = gamepad.axes[0]; // Left stick horizontal
+                const y_axis = gamepad.axes[1]; // Left stick vertical
+                const z_axis = gamepad.axes[2]; // Right stick horizontal
+
+                const x_speed = -applyDeadzone(x_axis, deadzone) * max_speed;
+                const y_speed = -applyDeadzone(y_axis, deadzone) * max_speed;
+                const yaw_speed = -applyDeadzone(z_axis, deadzone) * max_speed;
+
+                // Send movement command to server
+                socket.emit('control_command', {
+                    'command': 'move',
+                    'x_speed': x_speed,
+                    'y_speed': y_speed,
+                    'yaw_speed': yaw_speed
+                });
+
+                // Handle button presses
+                const buttonsPressed = gamepad.buttons;
+                for (let i = 0; i < buttonsPressed.length; i++) {
+                    const button = buttonsPressed[i];
+                    if (button.pressed && !buttonStates[i]) {
+                        // Button i was just pressed
+                        let command = null;
+                        let gait_type = null;
+                        switch (i) {
+                            case 0:
+                                command = 'stand_up';
+                                break;
+                            case 1:
+                                command = 'stand_down';
+                                break;
+                            case 2:
+                                command = 'balance_stand';
+                                break;
+                            case 3:
+                                command = 'recovery_stand';
+                                break;
+                            case 4:
+                                command = 'switch_gait';
+                                gait_type = 0;
+                                break;
+                            case 5:
+                                command = 'switch_gait';
+                                gait_type = 1;
+                                break;
+                            case 6:
+                                command = 'stop_move';
+                                break;
+                            // Añade más casos si es necesario
+                        }
+                        if (command) {
+                            socket.emit('control_command', {
+                                'command': command,
+                                'gait_type': gait_type
+                            });
+                        }
+                        buttonStates[i] = true;
+                    } else if (!button.pressed && buttonStates[i]) {
+                        // Button i was just released
+                        buttonStates[i] = false;
+                    }
+                }
+
+            } else {
+                statusText.textContent = 'No Gamepad Detected';
+                indicator.style.backgroundColor = '#dc3545';
+                axisValues.textContent = 'Axes: Waiting for data...';
+                buttonValues.textContent = 'Buttons: Waiting for data...';
+            }
+        }
+
+        function pollGamepad() {
+            const gamepads = navigator.getGamepads();
+            for (const gamepad of gamepads) {
+                if (gamepad) {
+                    updateGamepadDisplay(gamepad);
+                    break;
+                }
+            }
+        }
+
+        window.addEventListener("gamepadconnected", (e) => {
+            console.log("Gamepad connected:", e.gamepad);
+            clearInterval(gamepadInterval);
+            gamepadInterval = setInterval(pollGamepad, 50);
+
+            // Initialize buttonStates
+            buttonStates = {};
+            for (let i = 0; i < e.gamepad.buttons.length; i++) {
+                buttonStates[i] = false;
+            }
+        });
+
+        window.addEventListener("gamepaddisconnected", (e) => {
+            console.log("Gamepad disconnected:", e.gamepad);
+            clearInterval(gamepadInterval);
+            updateGamepadDisplay(null);
+            buttonStates = {};
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const gamepads = navigator.getGamepads();
+            for (const gamepad of gamepads) {
+                if (gamepad) {
+                    console.log("Gamepad already connected:", gamepad);
+                    gamepadInterval = setInterval(pollGamepad, 50);
+
+                    // Initialize buttonStates
+                    buttonStates = {};
+                    for (let i = 0; i < gamepad.buttons.length; i++) {
+                        buttonStates[i] = false;
+                    }
+
+                    break;
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
