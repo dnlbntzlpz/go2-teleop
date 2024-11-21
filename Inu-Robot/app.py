@@ -115,7 +115,8 @@ class RobotControl:
                 yaw_speed = self.yaw_speed
             try:
                 # Always send movement commands
-                self.client.Move(y_speed, x_speed, yaw_speed)
+                if y_speed != 0 or x_speed != 0 or yaw_speed != 0:
+                    self.client.Move(y_speed, x_speed, yaw_speed)
             except Exception as e:
                 logger.error(f"Error sending Move command: {e}")
             time.sleep(0.02)  # Sleep for 20ms
@@ -229,12 +230,14 @@ def handle_control_command(data):
         y_speed = data.get('y_speed', 0)
         x_speed = data.get('x_speed', 0)
         yaw_speed = data.get('yaw_speed', 0)
+        print(x_speed, y_speed, yaw_speed)
         robot_control.set_speeds(x_speed, y_speed, yaw_speed)
     else:
         # For other commands, reset speeds to zero
         robot_control.set_speeds(0, 0, 0)
         if command == 'stand_up':
             robot_control.stand_up()
+            robot_control.balance_stand()
         elif command == 'stand_down':
             robot_control.stand_down()
         elif command == 'stop_move':
