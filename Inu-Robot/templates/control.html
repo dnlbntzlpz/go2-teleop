@@ -318,7 +318,7 @@
         const buttonValues = document.getElementById('buttonValues');
 
         let buttonStates = {};
-        const max_speed = 0.5; // Velocidad máxima
+        const max_speed = 0.7; // Velocidad máxima
         const deadzone = 0.3;
 
         function applyDeadzone(value, deadzone) {
@@ -340,7 +340,7 @@
                 // Map axes to robot control inputs
                 const x_axis = gamepad.axes[0]; // Left stick horizontal
                 const y_axis = gamepad.axes[1]; // Left stick vertical
-                const z_axis = gamepad.axes[2]; // Right stick horizontal
+                const z_axis = gamepad.axes[5]; // Right stick horizontal
 
                 const x_speed = -applyDeadzone(x_axis, deadzone) * max_speed;
                 const y_speed = -applyDeadzone(y_axis, deadzone) * max_speed;

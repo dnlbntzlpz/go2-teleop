@@ -12,7 +12,7 @@ logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
 
 class AppRunner:
-    def __init__(self, port: int = 5000, app_path: str = "app.py", startup_timeout: int = 10):
+    def __init__(self, port: int = 5001, app_path: str = "app.py", startup_timeout: int = 10):
         self.port = port
         self.app_path = app_path
         self.startup_timeout = startup_timeout

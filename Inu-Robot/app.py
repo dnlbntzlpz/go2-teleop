@@ -51,7 +51,7 @@ class RobotCameraConfig:
     def initialize(self):
         try:
             logger.info("Initializing robot camera...")
-            #ChannelFactoryInitialize(0)
+            # ChannelFactoryInitialize(0)
             self.client = VideoClient()
             self.client.SetTimeout(3.0)
             self.client.Init()
@@ -88,7 +88,7 @@ class RobotControl:
     def initialize(self):
         try:
             logger.info("Initializing robot control...")
-            #ChannelFactoryInitialize(0, self.network_interface)
+            # ChannelFactoryInitialize(0, self.network_interface)
             self.client = SportClient()
             self.client.SetTimeout(10.0)
             self.client.Init()
@@ -346,14 +346,16 @@ if __name__ == '__main__':
         logger.error("Failed to initialize robot camera.")
 
     # Initialize robot control
-    robot_control = RobotControl(network_interface='eth0')  # Adjust network interface if needed
+    # Adjust network interface if needed
+    robot_control = RobotControl(network_interface='eth0')
     if robot_control.initialize():
         logger.info("Robot control initialized successfully.")
     else:
         logger.error("Failed to initialize robot control.")
 
     try:
-        socketio.run(app, host='0.0.0.0', port=5001, allow_unsafe_werkzeug=True)
+        socketio.run(app, host='0.0.0.0', port=8066,
+                     allow_unsafe_werkzeug=True)
     finally:
         if camera_config:
             camera_config.cleanup()
