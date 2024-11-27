@@ -354,7 +354,7 @@ if __name__ == '__main__':
         logger.error("Failed to initialize robot control.")
 
     try:
-        socketio.run(app, host='0.0.0.0', port=8065,  #8066
+        socketio.run(app, host='0.0.0.0', port=8066,
                      allow_unsafe_werkzeug=True)
     finally:
         if camera_config:

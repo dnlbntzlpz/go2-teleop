@@ -212,8 +212,9 @@
                     </div>
 
                     <div class="joystick-data">
-                        <div class="data-label">Robot Status:</div>
-                        <div class="data-value" id="robotStatus">Waiting for status...</div>
+                        <div class="data-label">Joystick Data:</div>
+                        <div class="data-value" id="axisValues">Axes: Waiting for data...</div>
+                        <div class="data-value" id="buttonValues">Buttons: Waiting for data...</div>
                     </div>
                 </div>
 
@@ -533,7 +534,7 @@
                 gamepadInterval = setInterval(pollKeyboard, 50);
             }
         });
-
+        
     </script>
 </body>
 
