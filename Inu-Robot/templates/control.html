@@ -212,9 +212,8 @@
                     </div>
 
                     <div class="joystick-data">
-                        <div class="data-label">Joystick Data:</div>
-                        <div class="data-value" id="axisValues">Axes: Waiting for data...</div>
-                        <div class="data-value" id="buttonValues">Buttons: Waiting for data...</div>
+                        <div class="data-label">Robot Status:</div>
+                        <div class="data-value" id="robotStatus">Waiting for status...</div>
                     </div>
                 </div>
 
@@ -455,6 +454,86 @@
                 }
             }
         });
+
+        // Keyboard control section
+        let keyboardState = {
+            x: 0,   // A/D horizontal axis
+            y: 0,   // W/S vertical axis
+            z: 0    // Left/Right arrow rotational axis
+        };
+
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'w': keyboardState.y = -1; break;
+                case 's': keyboardState.y = 1; break;
+                case 'a': keyboardState.x = -1; break;
+                case 'd': keyboardState.x = 1; break;
+                case 'ArrowLeft': keyboardState.z = -1; break;
+                case 'ArrowRight': keyboardState.z = 1; break;
+                case 'ArrowUp': 
+                    socket.emit('control_command', {
+                        'command': 'stand_up'
+                    });
+                    socket.emit('control_command', {
+                        'command': 'balance_stand'
+                    });
+                    break;
+                case 'ArrowDown':
+                    socket.emit('control_command', {
+                        'command': 'stand_down'
+                    });
+                    break;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            switch(e.key) {
+                case 'w':
+                case 's': keyboardState.y = 0; break;
+                case 'a':
+                case 'd': keyboardState.x = 0; break;
+                case 'ArrowLeft':
+                case 'ArrowRight': keyboardState.z = 0; break;
+            }
+        });
+
+        function pollKeyboard() {
+            // Simulate a similar interface to gamepad control
+            const gamepad = {
+                id: 'Keyboard Control',
+                axes: [
+                    keyboardState.x,     // Horizontal axis (A/D)
+                    keyboardState.y,     // Vertical axis (W/S) 
+                    0,                   // Unused
+                    0,                   // Unused
+                    0,                   // Unused
+                    keyboardState.z      // Rotational axis (Left/Right arrows)
+                ],
+                buttons: Array(10).fill({ pressed: false })
+            };
+
+            updateGamepadDisplay(gamepad);
+        }
+
+        // Check for gamepad or start keyboard polling
+        document.addEventListener('DOMContentLoaded', function () {
+            const gamepads = navigator.getGamepads();
+            let gamepadFound = false;
+
+            for (const gamepad of gamepads) {
+                if (gamepad) {
+                    gamepadFound = true;
+                    gamepadInterval = setInterval(pollGamepad, 50);
+                    break;
+                }
+            }
+
+            // If no gamepad found, start keyboard polling
+            if (!gamepadFound) {
+                gamepadInterval = setInterval(pollKeyboard, 50);
+            }
+        });
+
     </script>
 </body>
 
