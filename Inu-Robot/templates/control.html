@@ -176,6 +176,47 @@
             font-size: 1rem;
         }
 
+        .keyboard-controls {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .keyboard-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .arrow-keys {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .key {
+            width: 40px;
+            height: 40px;
+            background: #1B1B3A;
+            border: 2px solid #2c2c57;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: monospace;
+            font-size: 16px;
+            color: #94a3b8;
+            transition: all 0.15s ease;
+        }
+
+        .key.active {
+            background: #B347FF;
+            color: white;
+            border-color: #B347FF;
+            transform: translateY(2px);
+        }
+
         @media (max-width: 1024px) {
             .control-panel {
                 grid-template-columns: 1fr;
@@ -211,10 +252,19 @@
                         <span id="joystickStatus">No Gamepad Detected</span>
                     </div>
 
-                    <div class="joystick-data">
-                        <div class="data-label">Joystick Data:</div>
-                        <div class="data-value" id="axisValues">Axes: Waiting for data...</div>
-                        <div class="data-value" id="buttonValues">Buttons: Waiting for data...</div>
+                    <div class="keyboard-controls">
+                        <div class="keyboard-row">
+                            <div class="key" id="keyW">W</div>
+                        </div>
+                        <div class="keyboard-row">
+                            <div class="key" id="keyA">A</div>
+                            <div class="key" id="keyS">S</div>
+                            <div class="key" id="keyD">D</div>
+                        </div>
+                        <div class="arrow-keys">
+                            <div class="key" id="keyArrowLeft">←</div>
+                            <div class="key" id="keyArrowRight">→</div>
+                        </div>
                     </div>
                 </div>
 
@@ -228,20 +278,40 @@
     <script>
         // Socket.IO initialization and optimized video feed handling
         const socket = io({
-            transports: ['websocket'], // Force WebSocket transport
+            transports: ['websocket'],
             reconnectionDelay: 1000,
             reconnectionDelayMax: 5000,
             timeout: 20000
         });
 
+        // DOM elements
         const videoFeed = document.getElementById('videoFeed');
         const latencySpan = document.getElementById('latency');
         const fpsSpan = document.getElementById('fps');
+        const indicator = document.getElementById('joystickIndicator');
+        const statusText = document.getElementById('joystickStatus');
+        const axisValues = document.getElementById('axisValues');
+        const buttonValues = document.getElementById('buttonValues');
 
+        // Video performance variables
         let lastFrameTime = performance.now();
         let frameCount = 0;
         let lastFpsUpdate = performance.now();
         let pendingFrame = false;
+
+        // Control system variables
+        let gamepadInterval;
+        let keyboardInterval;
+        let buttonStates = {};
+        const max_speed = 0.7;
+        const deadzone = 0.3;
+
+        // Keyboard state
+        let keyboardState = {
+            x: 0,   // A/D horizontal axis
+            y: 0,   // W/S vertical axis
+            z: 0    // Left/Right arrow rotational axis
+        };
 
         // Create an image buffer to prevent tearing
         const bufferImage = new Image();
@@ -250,32 +320,33 @@
             pendingFrame = false;
         };
 
+        // Movement command function
+        function sendMovementCommand(x_speed, y_speed, yaw_speed) {
+            socket.emit('control_command', {
+                'command': 'move',
+                'x_speed': -x_speed * max_speed,
+                'y_speed': -y_speed * max_speed,
+                'yaw_speed': -yaw_speed * max_speed
+            });
+        }
+
+        // Frame handling
         socket.on('frame', (data) => {
-            // Skip frame if we're still processing the previous one
-            if (pendingFrame) {
-                return;
-            }
+            if (pendingFrame) return;
 
             const currentTime = performance.now();
-
-            // Throttle frame processing
-            if (currentTime - lastFrameTime < 66.67) { // Cap at ~15 FPS
-                return;
-            }
+            if (currentTime - lastFrameTime < 66.67) return;
 
             pendingFrame = true;
             bufferImage.src = `data:image/jpeg;base64,${data.data}`;
 
-            // Calculate and update latency (with smoothing)
             const latency = Math.round((currentTime - lastFrameTime) * 0.8 +
                 parseInt(latencySpan.textContent) * 0.2);
             latencySpan.textContent = latency;
 
-            // Calculate FPS with smoothing
             frameCount++;
             if (currentTime - lastFpsUpdate >= 1000) {
                 const fps = Math.round(frameCount * 1000 / (currentTime - lastFpsUpdate));
-                // Smooth FPS display
                 const currentFps = parseInt(fpsSpan.textContent) || 0;
                 fpsSpan.textContent = Math.round(fps * 0.3 + currentFps * 0.7);
                 frameCount = 0;
@@ -285,19 +356,18 @@
             lastFrameTime = currentTime;
         });
 
-        // Optimize socket connection
+        // Socket connection handling
         socket.on('connect_error', (error) => {
             console.log('Connection Error:', error);
-            // Implement exponential backoff
             socket.io.opts.reconnectionDelay *= 2;
         });
 
         socket.on('connect', () => {
             console.log('Connected to server');
-            socket.io.opts.reconnectionDelay = 1000; // Reset reconnection delay
+            socket.io.opts.reconnectionDelay = 1000;
         });
 
-        // Optional: Add connection status indicator
+        // Connection status indicator
         const connectionStatus = document.createElement('span');
         connectionStatus.style.marginLeft = '10px';
         document.querySelector('.video-stats').appendChild(connectionStatus);
@@ -310,17 +380,7 @@
             connectionStatus.textContent = '🔴 Disconnected';
         });
 
-        // Gamepad handling
-        let gamepadInterval;
-        const indicator = document.getElementById('joystickIndicator');
-        const statusText = document.getElementById('joystickStatus');
-        const axisValues = document.getElementById('axisValues');
-        const buttonValues = document.getElementById('buttonValues');
-
-        let buttonStates = {};
-        const max_speed = 0.7; // Velocidad máxima
-        const deadzone = 0.3;
-
+        // Control Functions
         function applyDeadzone(value, deadzone) {
             return Math.abs(value) < deadzone ? 0 : value;
         }
@@ -336,71 +396,54 @@
                 const buttons = Array.from(gamepad.buttons).map(button => button.pressed ? 1 : 0);
                 buttonValues.textContent = `Buttons: [${buttons.join(',')}]`;
 
-                // Send gamepad inputs to server
-                // Map axes to robot control inputs
-                const x_axis = gamepad.axes[0]; // Left stick horizontal
-                const y_axis = gamepad.axes[1]; // Left stick vertical
-                const z_axis = gamepad.axes[5]; // Right stick horizontal
+                // Only process gamepad movements if it's a real gamepad
+                if (gamepad.id !== 'Keyboard Control') {
+                    const x_axis = gamepad.axes[0];
+                    const y_axis = gamepad.axes[1];
+                    const z_axis = gamepad.axes[5];
 
-                const x_speed = -applyDeadzone(x_axis, deadzone) * max_speed;
-                const y_speed = -applyDeadzone(y_axis, deadzone) * max_speed;
-                const yaw_speed = -applyDeadzone(z_axis, deadzone) * max_speed;
+                    const x_speed = applyDeadzone(x_axis, deadzone);
+                    const y_speed = applyDeadzone(y_axis, deadzone);
+                    const yaw_speed = applyDeadzone(z_axis, deadzone);
 
-                // Send movement command to server
-                socket.emit('control_command', {
-                    'command': 'move',
-                    'x_speed': x_speed,
-                    'y_speed': y_speed,
-                    'yaw_speed': yaw_speed
-                });
+                    sendMovementCommand(x_speed, y_speed, yaw_speed);
 
-                // Handle button presses
-                const buttonsPressed = gamepad.buttons;
-                for (let i = 0; i < buttonsPressed.length; i++) {
-                    const button = buttonsPressed[i];
-                    if (button.pressed && !buttonStates[i]) {
-                        // Button i was just pressed
-                        let command = null;
-                        let gait_type = null;
-                        switch (i) {
-                            case 0:
-                                command = 'stand_up';
-                                break;
-                            case 1:
-                                command = 'stand_down';
-                                break;
-                            case 2:
-                                command = 'balance_stand';
-                                break;
-                            case 3:
-                                command = 'recovery_stand';
-                                break;
-                            case 4:
-                                command = 'switch_gait';
-                                gait_type = 0;
-                                break;
-                            case 5:
-                                command = 'switch_gait';
-                                gait_type = 1;
-                                break;
-                            case 6:
-                                command = 'stop_move';
-                                break;
-                            // Añade más casos si es necesario
+                    // Handle buttons
+                    if (gamepad.buttons) {
+                        const buttonsPressed = gamepad.buttons;
+                        for (let i = 0; i < buttonsPressed.length; i++) {
+                            const button = buttonsPressed[i];
+                            if (button.pressed && !buttonStates[i]) {
+                                let command = null;
+                                let gait_type = null;
+                                switch (i) {
+                                    case 0: command = 'stand_up'; break;
+                                    case 1: command = 'stand_down'; break;
+                                    case 2: command = 'balance_stand'; break;
+                                    case 3: command = 'recovery_stand'; break;
+                                    case 4:
+                                        command = 'switch_gait';
+                                        gait_type = 0;
+                                        break;
+                                    case 5:
+                                        command = 'switch_gait';
+                                        gait_type = 1;
+                                        break;
+                                    case 6: command = 'stop_move'; break;
+                                }
+                                if (command) {
+                                    socket.emit('control_command', {
+                                        'command': command,
+                                        'gait_type': gait_type
+                                    });
+                                }
+                                buttonStates[i] = true;
+                            } else if (!button.pressed && buttonStates[i]) {
+                                buttonStates[i] = false;
+                            }
                         }
-                        if (command) {
-                            socket.emit('control_command', {
-                                'command': command,
-                                'gait_type': gait_type
-                            });
-                        }
-                        buttonStates[i] = true;
-                    } else if (!button.pressed && buttonStates[i]) {
-                        // Button i was just released
-                        buttonStates[i] = false;
                     }
                 }
-
             } else {
                 statusText.textContent = 'No Gamepad Detected';
                 indicator.style.backgroundColor = '#dc3545';
@@ -419,12 +462,40 @@
             }
         }
 
+        function pollKeyboard() {
+            const gamepad = {
+                id: 'Keyboard Control',
+                axes: [
+                    keyboardState.x,
+                    keyboardState.y,
+                    0,
+                    0,
+                    0,
+                    keyboardState.z
+                ],
+                buttons: Array(10).fill({ pressed: false })
+            };
+
+            updateGamepadDisplay(gamepad);
+        }
+
+        function updateKeyDisplay(key, isPressed) {
+            const keyElement = document.getElementById(`key${key}`);
+            if (keyElement) {
+                if (isPressed) {
+                    keyElement.classList.add('active');
+                } else {
+                    keyElement.classList.remove('active');
+                }
+            }
+        }
+
+        // Event Listeners
         window.addEventListener("gamepadconnected", (e) => {
             console.log("Gamepad connected:", e.gamepad);
             clearInterval(gamepadInterval);
             gamepadInterval = setInterval(pollGamepad, 50);
 
-            // Initialize buttonStates
             buttonStates = {};
             for (let i = 0; i < e.gamepad.buttons.length; i++) {
                 buttonStates[i] = false;
@@ -438,85 +509,76 @@
             buttonStates = {};
         });
 
-        document.addEventListener('DOMContentLoaded', function () {
-            const gamepads = navigator.getGamepads();
-            for (const gamepad of gamepads) {
-                if (gamepad) {
-                    console.log("Gamepad already connected:", gamepad);
-                    gamepadInterval = setInterval(pollGamepad, 50);
-
-                    // Initialize buttonStates
-                    buttonStates = {};
-                    for (let i = 0; i < gamepad.buttons.length; i++) {
-                        buttonStates[i] = false;
-                    }
-
-                    break;
-                }
-            }
-        });
-
-        // Keyboard control section
-        let keyboardState = {
-            x: 0,   // A/D horizontal axis
-            y: 0,   // W/S vertical axis
-            z: 0    // Left/Right arrow rotational axis
-        };
-
+        // Keyboard event listeners with direct movement commands
         document.addEventListener('keydown', (e) => {
-            switch(e.key) {
-                case 'w': keyboardState.y = -1; break;
-                case 's': keyboardState.y = 1; break;
-                case 'a': keyboardState.x = -1; break;
-                case 'd': keyboardState.x = 1; break;
-                case 'ArrowLeft': keyboardState.z = -1; break;
-                case 'ArrowRight': keyboardState.z = 1; break;
-                case 'ArrowUp': 
-                    socket.emit('control_command', {
-                        'command': 'stand_up'
-                    });
-                    socket.emit('control_command', {
-                        'command': 'balance_stand'
-                    });
+            switch (e.key.toLowerCase()) {
+                case 'w':
+                    keyboardState.y = -1;
+                    updateKeyDisplay('W', true);
+                    sendMovementCommand(keyboardState.x, keyboardState.y, keyboardState.z);
                     break;
-                case 'ArrowDown':
-                    socket.emit('control_command', {
-                        'command': 'stand_down'
-                    });
+                case 's':
+                    keyboardState.y = 1;
+                    updateKeyDisplay('S', true);
+                    sendMovementCommand(keyboardState.x, keyboardState.y, keyboardState.z);
+                    break;
+                case 'a':
+                    keyboardState.x = -1;
+                    updateKeyDisplay('A', true);
+                    sendMovementCommand(keyboardState.x, keyboardState.y, keyboardState.z);
+                    break;
+                case 'd':
+                    keyboardState.x = 1;
+                    updateKeyDisplay('D', true);
+                    sendMovementCommand(keyboardState.x, keyboardState.y, keyboardState.z);
+                    break;
+                case 'arrowleft':
+                    keyboardState.z = -1;
+                    updateKeyDisplay('ArrowLeft', true);
+                    sendMovementCommand(keyboardState.x, keyboardState.y, keyboardState.z);
+                    break;
+                case 'arrowright':
+                    keyboardState.z = 1;
+                    updateKeyDisplay('ArrowRight', true);
+                    sendMovementCommand(keyboardState.x, keyboardState.y, keyboardState.z);
+                    break;
+                case 'arrowup':
+                    socket.emit('control_command', { 'command': 'stand_up' });
+                    socket.emit('control_command', { 'command': 'balance_stand' });
+                    break;
+                case 'arrowdown':
+                    socket.emit('control_command', { 'command': 'stand_down' });
                     break;
             }
         });
 
         document.addEventListener('keyup', (e) => {
-            switch(e.key) {
+            switch (e.key.toLowerCase()) {
                 case 'w':
-                case 's': keyboardState.y = 0; break;
+                case 's':
+                    keyboardState.y = 0;
+                    updateKeyDisplay('W', false);
+                    updateKeyDisplay('S', false);
+                    sendMovementCommand(keyboardState.x, keyboardState.y, keyboardState.z);
+                    break;
                 case 'a':
-                case 'd': keyboardState.x = 0; break;
-                case 'ArrowLeft':
-                case 'ArrowRight': keyboardState.z = 0; break;
+                case 'd':
+                    keyboardState.x = 0;
+                    updateKeyDisplay('A', false);
+                    updateKeyDisplay('D', false);
+                    sendMovementCommand(keyboardState.x, keyboardState.y, keyboardState.z);
+                    break;
+                case 'arrowleft':
+                case 'arrowright':
+                    keyboardState.z = 0;
+                    updateKeyDisplay('ArrowLeft', false);
+                    updateKeyDisplay('ArrowRight', false);
+                    sendMovementCommand(keyboardState.x, keyboardState.y, keyboardState.z);
+                    break;
             }
         });
 
-        function pollKeyboard() {
-            // Simulate a similar interface to gamepad control
-            const gamepad = {
-                id: 'Keyboard Control',
-                axes: [
-                    keyboardState.x,     // Horizontal axis (A/D)
-                    keyboardState.y,     // Vertical axis (W/S) 
-                    0,                   // Unused
-                    0,                   // Unused
-                    0,                   // Unused
-                    keyboardState.z      // Rotational axis (Left/Right arrows)
-                ],
-                buttons: Array(10).fill({ pressed: false })
-            };
-
-            updateGamepadDisplay(gamepad);
-        }
-
-        // Check for gamepad or start keyboard polling
+        // Initialize controls on page load
         document.addEventListener('DOMContentLoaded', function () {
             const gamepads = navigator.getGamepads();
             let gamepadFound = false;
@@ -525,16 +587,20 @@
                 if (gamepad) {
                     gamepadFound = true;
                     gamepadInterval = setInterval(pollGamepad, 50);
+
+                    buttonStates = {};
+                    for (let i = 0; i < gamepad.buttons.length; i++) {
+                        buttonStates[i] = false;
+                    }
                     break;
                 }
             }
 
-            // If no gamepad found, start keyboard polling
             if (!gamepadFound) {
-                gamepadInterval = setInterval(pollKeyboard, 50);
+                keyboardInterval = setInterval(pollKeyboard, 50);
             }
         });
-        
+
     </script>
 </body>
 
