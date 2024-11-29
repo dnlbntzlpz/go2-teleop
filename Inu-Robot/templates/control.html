@@ -217,6 +217,70 @@
             transform: translateY(2px);
         }
 
+        .robot-status-panel {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 20px;
+            background-color: #13132B;
+            padding: 16px;
+            border-radius: 12px;
+        }
+
+        .status-button {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #1B1B3A;
+            border: 2px solid #2c2c57;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .status-button svg {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 8px;
+            color: #94a3b8;
+            transition: color 0.3s ease;
+        }
+
+        .status-button .status-text {
+            color: #94a3b8;
+            font-size: 0.8rem;
+            margin-bottom: 4px;
+        }
+
+        .status-button .key-hint {
+            color: #6b7280;
+            font-size: 1rem;
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+        }
+
+        .status-button.active {
+            background: linear-gradient(135deg, #B347FF, #47F3FF);
+            border-color: #B347FF;
+        }
+
+        .status-button.active svg {
+            color: white;
+        }
+
+        .status-button.active .status-text {
+            color: white;
+        }
+
+        .status-button.active .key-hint {
+            color: rgba(255,255,255,0.7);
+        }
+
         @media (max-width: 1024px) {
             .control-panel {
                 grid-template-columns: 1fr;
@@ -272,6 +336,30 @@
                     Operator: {{ current_user.username }}
                 </div>
             </div>
+
+            <div class="robot-status-panel">
+                <div class="status-button" id="standButton">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                    </svg>
+                    <div class="status-text">Stand Up</div>
+                    <div class="key-hint">↑</div>
+                </div>
+                <div class="status-button" id="sitButton">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-6-9 6 9-2zm0 0V5" />
+                    </svg>
+                    <div class="status-text">Sit Down</div>
+                    <div class="key-hint">↓</div>
+                </div>
+                <div class="status-button" id="balanceButton">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div class="status-text">Balance</div>
+                    <div class="key-hint">B</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -292,6 +380,12 @@
         const statusText = document.getElementById('joystickStatus');
         const axisValues = document.getElementById('axisValues');
         const buttonValues = document.getElementById('buttonValues');
+
+        //buttons
+        const standButton = document.getElementById('standButton');
+        const sitButton = document.getElementById('sitButton');
+        const balanceButton = document.getElementById('balanceButton');
+
 
         // Video performance variables
         let lastFrameTime = performance.now();
@@ -543,12 +637,18 @@
                     sendMovementCommand(keyboardState.x, keyboardState.y, keyboardState.z);
                     break;
                 case 'arrowup':
+                    standButton.classList.add('active');
                     socket.emit('control_command', { 'command': 'stand_up' });
                     socket.emit('control_command', { 'command': 'balance_stand' });
                     break;
                 case 'arrowdown':
+                    sitButton.classList.add('active');
                     socket.emit('control_command', { 'command': 'stand_down' });
                     break;
+                case 'b':
+                    balanceButton.classList.add('active');
+                    socket.emit('control_command', { 'command': 'balance_stand' });
+                        break;
             }
         });
 
@@ -575,7 +675,29 @@
                     updateKeyDisplay('ArrowRight', false);
                     sendMovementCommand(keyboardState.x, keyboardState.y, keyboardState.z);
                     break;
+                case 'arrowup':
+                    standButton.classList.remove('active');
+                    break;
+                case 'arrowdown':
+                    sitButton.classList.remove('active');
+                    break;
+                case 'b':
+                    balanceButton.classList.remove('active');
+                    break;
             }
+        });
+
+        standButton.addEventListener('click', () => {
+            socket.emit('control_command', { 'command': 'stand_up' });
+            socket.emit('control_command', { 'command': 'balance_stand' });
+        });
+
+        sitButton.addEventListener('click', () => {
+            socket.emit('control_command', { 'command': 'stand_down' });
+        });
+
+        balanceButton.addEventListener('click', () => {
+            socket.emit('control_command', { 'command': 'balance_stand' });
         });
 
         // Initialize controls on page load
