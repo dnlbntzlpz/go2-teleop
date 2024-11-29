@@ -278,7 +278,7 @@
         }
 
         .status-button.active .key-hint {
-            color: rgba(255,255,255,0.7);
+            color: rgba(255, 255, 255, 0.7);
         }
 
         @media (max-width: 1024px) {
@@ -340,21 +340,24 @@
             <div class="robot-status-panel">
                 <div class="status-button" id="standButton" title="Presiona ↑ para pararse">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                     </svg>
                     <div class="status-text">Stand Up</div>
                     <div class="key-hint">↑</div>
                 </div>
                 <div class="status-button" id="sitButton" title="Presiona ↓ para sentarse">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-6-9 6 9-2zm0 0V5" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 19l9 2-9-6-9 6 9-2zm0 0V5" />
                     </svg>
                     <div class="status-text">Sit Down</div>
                     <div class="key-hint">↓</div>
                 </div>
                 <div class="status-button" id="balanceButton" title="Presiona B para balancear">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div class="status-text">Balance</div>
                     <div class="key-hint">B</div>
@@ -401,11 +404,15 @@
         let pendingFrame = false;
 
         // Control system variables
-        let gamepadInterval;
-        let keyboardInterval;
+        let gamepadInterval = null;
+        let keyboardInterval = null;
         let buttonStates = {};
         const max_speed = 0.7;
         const deadzone = 0.3;
+
+        // Add throttling for display updates
+        let lastDisplayUpdate = 0;
+        const DISPLAY_UPDATE_INTERVAL = 100; // Update display every 100ms
 
         // Keyboard state
         let keyboardState = {
@@ -487,77 +494,99 @@
             connectionStatus.textContent = '🔴 Disconnected';
         });
 
-        // Control Functions
         function applyDeadzone(value, deadzone) {
-            return Math.abs(value) < deadzone ? 0 : value;
+            if (Math.abs(value) < deadzone) {
+                return 0;
+            }
+            // Normalize the value considering the deadzone
+            return (value - Math.sign(value) * deadzone) / (1 - deadzone);
         }
 
+        // Control Functions
         function updateGamepadDisplay(gamepad) {
+            const now = performance.now();
+
             if (gamepad) {
-                statusText.textContent = `Connected: ${gamepad.id}`;
-                indicator.style.backgroundColor = '#28a745';
-
-                const axes = Array.from(gamepad.axes).map(axis => axis.toFixed(2));
-                axisValues.textContent = `Axes:\n[${axes.join(',')}]`;
-
-                const buttons = Array.from(gamepad.buttons).map(button => button.pressed ? 1 : 0);
-                buttonValues.textContent = `Buttons: [${buttons.join(',')}]`;
-
-                // Only process gamepad movements if it's a real gamepad
+                // Always process controls at full speed
                 if (gamepad.id !== 'Keyboard Control') {
-                    const x_axis = gamepad.axes[0];
-                    const y_axis = gamepad.axes[1];
-                    const z_axis = gamepad.axes[5];
+                    // Map correct gamepad axes based on standard gamepad layout
+                    const x_axis = gamepad.axes[0];  // Left stick X
+                    const y_axis = gamepad.axes[1];  // Left stick Y
+                    const z_axis = gamepad.axes[5];  // Right stick X (changed from 5 to 2)
 
                     const x_speed = applyDeadzone(x_axis, deadzone);
                     const y_speed = applyDeadzone(y_axis, deadzone);
                     const yaw_speed = applyDeadzone(z_axis, deadzone);
 
-                    sendMovementCommand(x_speed, y_speed, yaw_speed);
+                    // Debug output
+                    console.log('Gamepad Input:', {
+                        raw: { x: x_axis, y: y_axis, z: z_axis },
+                        processed: { x: x_speed, y: y_speed, yaw: yaw_speed }
+                    });
 
-                    // Handle buttons
-                    if (gamepad.buttons) {
-                        const buttonsPressed = gamepad.buttons;
-                        for (let i = 0; i < buttonsPressed.length; i++) {
-                            const button = buttonsPressed[i];
-                            if (button.pressed && !buttonStates[i]) {
-                                let command = null;
-                                let gait_type = null;
-                                switch (i) {
-                                    case 0: command = 'stand_up'; break;
-                                    case 1: command = 'stand_down'; break;
-                                    case 2: command = 'balance_stand'; break;
-                                    case 3: command = 'recovery_stand'; break;
-                                    case 4:
-                                        command = 'switch_gait';
-                                        gait_type = 0;
-                                        break;
-                                    case 5:
-                                        command = 'switch_gait';
-                                        gait_type = 1;
-                                        break;
-                                    case 6: command = 'stop_move'; break;
-                                }
-                                if (command) {
-                                    socket.emit('control_command', {
-                                        'command': command,
-                                        'gait_type': gait_type
-                                    });
-                                }
-                                buttonStates[i] = true;
-                            } else if (!button.pressed && buttonStates[i]) {
-                                buttonStates[i] = false;
-                            }
-                        }
-                    }
+                    sendMovementCommand(x_speed, y_speed, yaw_speed);
+                    processGamepadButtons(gamepad);
                 }
-            } else {
-                statusText.textContent = 'No Gamepad Detected';
-                indicator.style.backgroundColor = '#dc3545';
-                axisValues.textContent = 'Axes: Waiting for data...';
-                buttonValues.textContent = 'Buttons: Waiting for data...';
+
+                // Throttle visual updates
+                if (now - lastDisplayUpdate >= DISPLAY_UPDATE_INTERVAL) {
+                    statusText.textContent = `Connected: ${gamepad.id}`;
+                    indicator.style.backgroundColor = '#28a745';
+
+                    lastDisplayUpdate = now;
+                }
             }
         }
+
+        function processGamepadButtons(gamepad) {
+            if (!gamepad.buttons) return;
+
+            // Log button states for debugging
+            console.log('Button States:', gamepad.buttons.map((b, i) => ({ index: i, pressed: b.pressed })));
+
+            const buttonMapping = {
+                0: 'stand_up',      // A button
+                1: 'stand_down',    // B button
+                2: 'balance_stand', // X button
+                3: 'recovery_stand' // Y button
+            };
+
+            for (let i = 0; i < gamepad.buttons.length; i++) {
+                const button = gamepad.buttons[i];
+                if (button.pressed && !buttonStates[i]) {
+                    console.log(`Button ${i} pressed`);
+
+                    const command = buttonMapping[i];
+                    if (command) {
+                        console.log(`Sending command: ${command}`);
+                        socket.emit('control_command', { 'command': command });
+
+                        // Update robot state based on commands
+                        if (command === 'stand_up') {
+                            robotState.isStanding = true;
+                            robotState.isSitting = false;
+                        } else if (command === 'stand_down') {
+                            robotState.isStanding = false;
+                            robotState.isSitting = true;
+                        } else if (command === 'balance_stand') {
+                            robotState.isBalancing = true;
+                        }
+
+                        updateButtonStates();
+                    }
+
+                    buttonStates[i] = true;
+                } else if (!button.pressed && buttonStates[i]) {
+                    buttonStates[i] = false;
+                }
+            }
+        }
+
+        // Add this to your DOMContentLoaded event
+        document.addEventListener('DOMContentLoaded', function () {
+            addGamepadDebugListener();
+            // ... rest of your existing code
+        });
 
         function pollGamepad() {
             const gamepads = navigator.getGamepads();
@@ -600,18 +629,38 @@
         // Event Listeners
         window.addEventListener("gamepadconnected", (e) => {
             console.log("Gamepad connected:", e.gamepad);
-            clearInterval(gamepadInterval);
-            gamepadInterval = setInterval(pollGamepad, 50);
 
+            // Clear both intervals to ensure no duplicate polling
+            if (keyboardInterval) {
+                clearInterval(keyboardInterval);
+                keyboardInterval = null;
+            }
+            if (gamepadInterval) {
+                clearInterval(gamepadInterval);
+            }
+
+            gamepadInterval = setInterval(pollGamepad, 50);
             buttonStates = {};
+
+            // Initialize button states
             for (let i = 0; i < e.gamepad.buttons.length; i++) {
                 buttonStates[i] = false;
             }
         });
 
+        // Update gamepad disconnection handler
         window.addEventListener("gamepaddisconnected", (e) => {
             console.log("Gamepad disconnected:", e.gamepad);
-            clearInterval(gamepadInterval);
+            if (gamepadInterval) {
+                clearInterval(gamepadInterval);
+                gamepadInterval = null;
+            }
+
+            // Restart keyboard interval when gamepad disconnects
+            if (!keyboardInterval) {
+                keyboardInterval = setInterval(pollKeyboard, 50);
+            }
+
             updateGamepadDisplay(null);
             buttonStates = {};
         });
@@ -620,22 +669,22 @@
         document.addEventListener('keydown', (e) => {
             switch (e.key.toLowerCase()) {
                 case 'w':
-                    keyboardState.y = -0.5;
+                    keyboardState.y = -0.7;
                     updateKeyDisplay('W', true);
                     sendMovementCommand(keyboardState.x, keyboardState.y, keyboardState.z);
                     break;
                 case 's':
-                    keyboardState.y = 0.5;
+                    keyboardState.y = 0.7;
                     updateKeyDisplay('S', true);
                     sendMovementCommand(keyboardState.x, keyboardState.y, keyboardState.z);
                     break;
                 case 'a':
-                    keyboardState.x = -0.5;
+                    keyboardState.x = -0.7;
                     updateKeyDisplay('A', true);
                     sendMovementCommand(keyboardState.x, keyboardState.y, keyboardState.z);
                     break;
                 case 'd':
-                    keyboardState.x = 0.5;
+                    keyboardState.x = 0.7;
                     updateKeyDisplay('D', true);
                     sendMovementCommand(keyboardState.x, keyboardState.y, keyboardState.z);
                     break;
