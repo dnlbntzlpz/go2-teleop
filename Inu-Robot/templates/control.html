@@ -338,21 +338,21 @@
             </div>
 
             <div class="robot-status-panel">
-                <div class="status-button" id="standButton">
+                <div class="status-button" id="standButton" title="Presiona ↑ para pararse">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                     </svg>
                     <div class="status-text">Stand Up</div>
                     <div class="key-hint">↑</div>
                 </div>
-                <div class="status-button" id="sitButton">
+                <div class="status-button" id="sitButton" title="Presiona ↓ para sentarse">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-6-9 6 9-2zm0 0V5" />
                     </svg>
                     <div class="status-text">Sit Down</div>
                     <div class="key-hint">↓</div>
                 </div>
-                <div class="status-button" id="balanceButton">
+                <div class="status-button" id="balanceButton" title="Presiona B para balancear">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -380,6 +380,13 @@
         const statusText = document.getElementById('joystickStatus');
         const axisValues = document.getElementById('axisValues');
         const buttonValues = document.getElementById('buttonValues');
+
+        //Robot state
+        let robotState = {
+            isStanding: false,
+            isSitting: false,
+            isBalancing: false
+        };
 
         //buttons
         const standButton = document.getElementById('standButton');
@@ -422,6 +429,12 @@
                 'y_speed': -y_speed * max_speed,
                 'yaw_speed': -yaw_speed * max_speed
             });
+        }
+
+        function updateButtonStates() {
+            standButton.classList.toggle('active', robotState.isStanding);
+            sitButton.classList.toggle('active', robotState.isSitting);
+            balanceButton.classList.toggle('active', robotState.isBalancing);
         }
 
         // Frame handling
@@ -637,18 +650,27 @@
                     sendMovementCommand(keyboardState.x, keyboardState.y, keyboardState.z);
                     break;
                 case 'arrowup':
-                    standButton.classList.add('active');
                     socket.emit('control_command', { 'command': 'stand_up' });
                     socket.emit('control_command', { 'command': 'balance_stand' });
+                    robotState.isStanding = true;
+                    robotState.isSitting = false;
+                    robotState.isBalancing = true;
+                    updateButtonStates();
                     break;
                 case 'arrowdown':
-                    sitButton.classList.add('active');
                     socket.emit('control_command', { 'command': 'stand_down' });
+                    robotState.isStanding = false;
+                    robotState.isSitting = true;
+                    robotState.isBalancing = false;
+                    updateButtonStates();
                     break;
                 case 'b':
-                    balanceButton.classList.add('active');
                     socket.emit('control_command', { 'command': 'balance_stand' });
-                        break;
+                    robotState.isBalancing = true;
+                    robotState.isStanding = true;
+                    robotState.isSitting = false;
+                    updateButtonStates();
+                    break;
             }
         });
 
@@ -675,29 +697,32 @@
                     updateKeyDisplay('ArrowRight', false);
                     sendMovementCommand(keyboardState.x, keyboardState.y, keyboardState.z);
                     break;
-                case 'arrowup':
-                    standButton.classList.remove('active');
-                    break;
-                case 'arrowdown':
-                    sitButton.classList.remove('active');
-                    break;
-                case 'b':
-                    balanceButton.classList.remove('active');
-                    break;
             }
         });
 
         standButton.addEventListener('click', () => {
             socket.emit('control_command', { 'command': 'stand_up' });
             socket.emit('control_command', { 'command': 'balance_stand' });
+            robotState.isStanding = true;
+            robotState.isSitting = false;
+            robotState.isBalancing = true;
+            updateButtonStates();
         });
 
         sitButton.addEventListener('click', () => {
             socket.emit('control_command', { 'command': 'stand_down' });
+            robotState.isStanding = false;
+            robotState.isSitting = true;
+            robotState.isBalancing = false;
+            updateButtonStates();
         });
 
         balanceButton.addEventListener('click', () => {
             socket.emit('control_command', { 'command': 'balance_stand' });
+            robotState.isBalancing = true;
+            robotState.isStanding = true;
+            robotState.isSitting = false;
+            updateButtonStates();
         });
 
         // Initialize controls on page load
