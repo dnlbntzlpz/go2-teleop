@@ -620,32 +620,32 @@
         document.addEventListener('keydown', (e) => {
             switch (e.key.toLowerCase()) {
                 case 'w':
-                    keyboardState.y = -1;
+                    keyboardState.y = -0.5;
                     updateKeyDisplay('W', true);
                     sendMovementCommand(keyboardState.x, keyboardState.y, keyboardState.z);
                     break;
                 case 's':
-                    keyboardState.y = 1;
+                    keyboardState.y = 0.5;
                     updateKeyDisplay('S', true);
                     sendMovementCommand(keyboardState.x, keyboardState.y, keyboardState.z);
                     break;
                 case 'a':
-                    keyboardState.x = -1;
+                    keyboardState.x = -0.5;
                     updateKeyDisplay('A', true);
                     sendMovementCommand(keyboardState.x, keyboardState.y, keyboardState.z);
                     break;
                 case 'd':
-                    keyboardState.x = 1;
+                    keyboardState.x = 0.5;
                     updateKeyDisplay('D', true);
                     sendMovementCommand(keyboardState.x, keyboardState.y, keyboardState.z);
                     break;
                 case 'arrowleft':
-                    keyboardState.z = -1;
+                    keyboardState.z = -0.7;
                     updateKeyDisplay('ArrowLeft', true);
                     sendMovementCommand(keyboardState.x, keyboardState.y, keyboardState.z);
                     break;
                 case 'arrowright':
-                    keyboardState.z = 1;
+                    keyboardState.z = 0.7;
                     updateKeyDisplay('ArrowRight', true);
                     sendMovementCommand(keyboardState.x, keyboardState.y, keyboardState.z);
                     break;
