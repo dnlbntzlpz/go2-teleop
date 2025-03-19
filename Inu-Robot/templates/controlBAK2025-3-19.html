@@ -11,14 +11,14 @@
   <style>
    body {
             margin: 0;
-            background-color: #121212; /* Dark background */
-            color: #e0e0e0; /* Light text for contrast */
+            background-color: #f9f9f9;
+            color: #333;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
     
         a {
             text-decoration: none;
-            color: #90caf9; /* Lighter blue for links */
+            color: #007bff;
         }
     
         .container {
@@ -36,7 +36,7 @@
     
         .header h1 {
             font-size: 2rem;
-            background: linear-gradient(90deg, #9575cd, #81c784); /* Lighter gradient colors */
+            background: linear-gradient(90deg, #673ab7, #4caf50);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -45,7 +45,7 @@
     
         .button {
             padding: 8px 16px;
-            background: linear-gradient(90deg, #9575cd, #81c784);
+            background: linear-gradient(90deg, #673ab7, #4caf50);
             border-radius: 20px;
             border: none;
             font-weight: 600;
@@ -65,17 +65,17 @@
         }
     
         .panel {
-            background: #1e1e1e; /* Darker panel background */
+            background: #fff;
             border-radius: 10px;
             padding: 20px;
             position: relative;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Deeper shadow for depth */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
     
         .panel h2 {
             margin-bottom: 20px;
             font-size: 1.5rem;
-            color: #81c784; /* Slightly lighter green */
+            color: #4caf50;
             font-weight: 600;
         }
     
@@ -114,86 +114,87 @@
 
         /* Command History */
         .status-panel {
-            background: #1e1e1e; /* Darker background */
+            background: #f9f9f9;
             padding: 15px;
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .status-panel h3 {
             font-size: 1.2rem;
             margin-bottom: 10px;
             text-align: center;
-            color: #e0e0e0; /* Light text color */
+            color: #333;
             font-weight: bold;
         }
 
         #commandHistoryList {
             font-size: 0.9rem;
-            color: #b0b0b0; /* Slightly dimmer text for list items */
+            color: #333;
         }
     
         /* Video Feed Styling */
         .camera-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 10px;
-            color: #e0e0e0; /* Light text color */
-        }
+            font-size: 1.2rem; /* Adjust font size */
+            font-weight: bold; /* Make it bold */
+            text-align: center; /* Center-align the title */
+            margin-bottom: 10px; /* Add spacing below the title */
+            color: #333; /* Adjust text color */
+}
 
         .video-feeds {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
+            display: flex; /* Align feeds side by side */
+            justify-content: center; /* Center-align the feeds */
+            gap: 20px; /* Add space between feeds */
             padding: 20px;
         }
 
         .video-feed {
-            width: 640px;
-            height: 360px;
-            text-align: center;
-            overflow: hidden;
+            /*16:9 aspect ratio*/
+            width: 640px; /* Fixed width 426px*/
+            height: 360px; /* Fixed height 240px*/
+            text-align: center; /* Center-align labels */
+            overflow: hidden; /* Prevent overflow if content exceeds container */
         }
 
         .video-feed img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4); /* Deeper shadow */
+            width: 100%; /* Scale image to fill the container width */
+            height: 100%; /* Scale image to fill the container height */
+            object-fit: cover; /* Maintain aspect ratio without distortion */
+            border-radius: 8px; /* Optional: Rounded corners */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional: Shadow for visuals */
         }
  
         .video-label {
             margin-top: 10px;
             font-size: 1rem;
-            color: #b0b0b0; /* Slightly dimmer text */
+            color: #333;
             font-weight: bold;
         }
 
         /* Status Dashboard Styling */
         .status-dashboard-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            padding: 20px;
-            box-sizing: border-box;
+            display: flex; /* Use Flexbox */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically (if needed) */
+            height: 100%; /* Optional: set height to fill the parent container */
+            padding: 20px; /* Optional: padding around the dashboard */
+            box-sizing: border-box; /* Include padding in width/height calculations */
         }
 
         .status-dashboard {
-            width: 100%;
-            background: #1e1e1e; /* Darker background */
+            width: 100%; /* Full width */
+            background: #f9f9f9;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             font-family: 'Arial', sans-serif;
             text-align: center;
         }
 
         .status-dashboard h4 {
             font-size: 1.5rem;
-            color: #e0e0e0; /* Light text color */
+            color: #333;
             margin-bottom: 20px;
             font-weight: bold;
         }
@@ -209,29 +210,29 @@
             display: flex;
             justify-content: space-between;
             font-size: 1rem;
-            color: #b0b0b0; /* Slightly dimmer text */
+            color: #555;
         }
 
         .status-dashboard li strong {
-            color: #e0e0e0; /* Light text color */
+            color: #333;
             font-weight: 600;
         }
 
         /* Grid Layout for Status Items */
         .status-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Responsive grid */
+            gap: 20px; /* Space between items */
             justify-items: center;
             align-items: center;
         }
 
         /* Horizontal Row for Status Items */
         .status-row {
-            display: flex;
-            justify-content: space-between;
+            display: flex; /* Align items in a single row */
+            justify-content: space-between; /* Space items evenly */
             align-items: center;
-            flex-wrap: wrap;
+            flex-wrap: wrap; /* Wrap items on smaller screens */
             gap: 20px;
         }
 
@@ -242,24 +243,24 @@
             align-items: center;
             text-align: center;
             flex: 1;
-            min-width: 120px;
+            min-width: 120px; /* Ensure consistent size */
         }
 
         .status-icon {
-            font-size: 2rem;
-            margin-bottom: 10px;
+            font-size: 2rem; /* Icon size */
+            margin-bottom: 10px; /* Spacing below the icon */
         }
 
         .status-label {
-            font-size: 0.9rem;
-            color: #b0b0b0; /* Slightly dimmer text */
-            margin-bottom: 5px;
+            font-size: 0.9rem; /* Label text size */
+            color: #555;
+            margin-bottom: 5px; /* Spacing below the label */
         }
 
         .status-value {
-            font-size: 1.2rem;
+            font-size: 1.2rem; /* Value text size */
             font-weight: bold;
-            color: #e0e0e0; /* Light text color */
+            color: #333;
         }
 
         /* Controls Section */
@@ -273,7 +274,7 @@
             align-items: center;
             gap: 10px;
             margin-bottom: 10px;
-            color: #b0b0b0; /* Slightly dimmer text */
+            color: #666;
             font-size: 0.9rem;
         }
     
@@ -288,11 +289,11 @@
             position: absolute;
             bottom: 10px;
             left: 10px;
-            background: rgba(30, 30, 30, 0.9); /* Dark semi-transparent background */
+            background: rgba(255, 255, 255, 0.9);
             padding: 5px 10px;
             border-radius: 5px;
             font-size: 0.9rem;
-            color: #b0b0b0; /* Slightly dimmer text */
+            color: #666;
             display: flex;
             gap: 10px;
         }
@@ -304,103 +305,103 @@
         }
 
         .controls-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            flex-wrap: wrap;
-            gap: 20px;
+            display: flex; /* Arrange sections in a row */
+            justify-content: space-between; /* Distribute space evenly */
+            align-items: flex-start; /* Align sections at the top */
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            gap: 20px; /* Add space between sections */
             padding: 20px;
         }
 
         .controller-status-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            padding: 20px;
-            box-sizing: border-box;
+            display: flex; /* Use Flexbox */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically (if needed) */
+            height: 100%; /* Optional: full height of the parent container */
+            padding: 20px; /* Optional: padding around the container */
+            box-sizing: border-box; /* Include padding in width/height calculations */
         }
 
         .controller-status {
-            background: #1e1e1e; /* Darker background */
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            text-align: center;
-            max-width: 400px;
-            width: 100%;
+            background: #f9f9f9; /* Light background */
+            padding: 15px; /* Add padding */
+            border-radius: 8px; /* Rounded corners */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            text-align: center; /* Center the text */
+            max-width: 400px; /* Optional: limit the size */
+            width: 100%; /* Make it responsive */
         }
     
         .keyboard-panel {
-            background: #2a2a2a; /* Slightly lighter dark background */
+            background: #f5f5f5;
             padding: 15px;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .status-panel {
             padding: 20px;
-            background: #1e1e1e; /* Darker background */
+            background: #f9f9f9;
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .robot-actions {
-            width: 100%;
-            max-width: 400px;
+            width: 100%; /* Full width within the middle section */
+            max-width: 400px; /* Prevent excessive size */
             padding: 20px;
-            background: #1e1e1e; /* Darker background */
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            background: #fff; /* Ensure a consistent background */
+            border-radius: 8px; /* Optional: Rounded corners */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional: Shadow */
         }
     
         .status-panel h3, .keyboard-panel h3 {
             font-size: 1.2rem;
             margin-bottom: 15px;
-            color: #9575cd; /* Lighter purple */
+            color: #673ab7;
             font-weight: 600;
         }
 
         .robot-actions h3 {
             margin-bottom: 15px;
             font-size: 1.2rem;
-            color: #e0e0e0; /* Light text color */
+            color: #333;
             font-weight: bold;
         }
             
         .connection-status {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
+            display: flex; /* Align status indicator and text */
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Align vertically */
+            gap: 10px; /* Add spacing between the items */
         }
     
         .status-indicator {
             width: 15px;
             height: 15px;
             border-radius: 50%;
-            background-color: red;
+            background-color: red; /* Default status color */
             flex-shrink: 0;
         }
 
         #joystickStatus {
             font-size: 0.9rem;
-            color: #e0e0e0; /* Light text color */
+            color: #333;
         }
 
         .keyboard-controls-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 20px;
+            display: flex; /* Flexbox for side-by-side layout */
+            justify-content: space-between; /* Add space between the sections */
+            align-items: flex-start; /* Align items at the top */
+            gap: 20px; /* Add spacing between the sections */
         }
     
         .keyboard-controls {
             flex: 1;
-            background: #1e1e1e; /* Darker background */
+            background: #f9f9f9;
             padding: 15px;
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             text-align: center;
             display: inline-block;
         }
@@ -408,13 +409,13 @@
         .keyboard-controls h3 {
             margin-bottom: 10px;
             font-size: 1.2rem;
-            color: #e0e0e0; /* Light text color */
+            color: #333;
             font-weight: bold;
         }
 
         .key-row {
             display: flex;
-            gap: 10px;
+            gap: 10px; /* Spacing between keys */
             justify-content: center;
         }
     
@@ -427,111 +428,114 @@
         .key {
             width: 40px;
             height: 40px;
-            background: #333333; /* Dark key background */
-            border: 2px solid #555555; /* Dark border */
+            background: #fff;
+            border: 2px solid #ccc;
             border-radius: 5px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: monospace;
             font-size: 16px;
-            color: #e0e0e0; /* Light text color */
+            color: #333;
             transition: all 0.15s ease;
-            user-select: none;
-            -webkit-user-select: none;
-            -ms-user-select: none;
-            -webkit-touch-callout: none;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
+
+            /* Prevent text selection and touch highlighting */
+            user-select: none; /* Standard */
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* Older IE */
+
+            /* Disable long-press behavior and touch feedback */
+            -webkit-touch-callout: none; /* Disable context menu on iOS */
+            -webkit-tap-highlight-color: transparent; /* Remove tap highlight on Android */
+            touch-action: manipulation; /* Allow basic touch events but prevent zooming/panning */
         }
     
         .key.active {
-            background: #81c784; /* Lighter green for active state */
-            color: #121212; /* Dark text on active key for contrast */
-            border-color: #81c784;
+            background: #4caf50;
+            color: white;
+            border-color: #4caf50;
             transform: translateY(1px);
         }
     
         .actions-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
+            grid-template-columns: repeat(2, 1fr); /* Two buttons per row */
+            gap: 15px; /* Spacing between buttons */
             justify-content: center;
         }
     
         .status-button {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: #2a2a2a; /* Slightly lighter dark background */
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            transition: background-color 0.2s ease, transform 0.1s ease;
+            flex-direction: column; /* Stack the content vertically */
+            align-items: center; /* Center align all content */
+            justify-content: center; /* Center align vertically */
+            background: #f9f9f9; /* Button background color */
+            padding: 15px; /* Add padding */
+            border-radius: 8px; /* Rounded corners */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            transition: background-color 0.2s ease, transform 0.1s ease; /* Hover/active effect */
         }
 
         .status-button:hover {
-            background: #3a3a3a; /* Lighter background on hover */
+            background: #e6e6e6; /* Lighter background on hover */
         }
     
         .status-button svg {
             width: 40px;
             height: 40px;
             margin-bottom: 8px;
-            color: #e0e0e0; /* Light svg color */
         }
     
         .status-button .status-text {
-            color: #e0e0e0; /* Light text color */
+            color: #333;
             font-size: 0.8rem;
             margin-bottom: 4px;
         }
 
         .status-text {
             font-size: 0.9rem;
-            color: #e0e0e0; /* Light text color */
+            color: #333;
             font-weight: bold;
         }
     
         .status-button .key-hint {
             font-size: 0.9rem;
-            margin-top: 5px;
-            color: #909090; /* Medium grey text */
-            font-style: italic;
+            margin-top: 5px; /* Space between status-text and hint */
+            color: #666;
+            font-style: italic; /* Optional: Make the hint italicized */
         }
 
         .key-hint {
             font-size: 0.8rem;
-            color: #909090; /* Medium grey text */
+            color: #999;
         }
     
         .status-button.active {
-            background: linear-gradient(135deg, #9575cd, #81c784); /* Lighter gradient */
-            border-color: #81c784;
+            background: linear-gradient(135deg, #673ab7, #4caf50);
+            border-color: #4caf50;
         }
     
         .status-button.active svg,
         .status-button.active .status-text {
-            color: #121212; /* Dark text on active button for contrast */
+            color: white;
         }
     
         .status-button.active .key-hint {
-            color: rgba(18, 18, 18, 0.7); /* Semi-transparent dark text */
+            color: rgba(255, 255, 255, 0.7);
         }
         
         .control-list {
             flex: 1;
             padding: 15px;
-            background: #1e1e1e; /* Darker background */
+            background: #f9f9f9;
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .control-list h3 {
             font-size: 1.5rem;
             margin-bottom: 10px;
-            color: #e0e0e0; /* Light text color */
+            color: #333;
             font-weight: 600;
         }
 
@@ -544,7 +548,7 @@
         .control-list li {
             margin: 5px 0;
             font-size: 1rem;
-            color: #b0b0b0; /* Slightly dimmer text */
+            color: #555;
             display: flex;
             align-items: center;
         }
@@ -552,30 +556,30 @@
         .control-list li strong {
             width: 80px;
             font-size: 1rem;
-            color: #e0e0e0; /* Light text color */
+            color: #333;
         }
     
         /* Media Query for Smaller Screens */
         @media (max-width: 768px) {
             .video-feed {
-                width: 100%;
-                height: auto;
+                width: 100%; /* Take the full width of the screen */
+                height: auto; /* Adjust height proportionally */
             }
 
             .controls-container {
-                flex-direction: column;
-                align-items: center;
+                flex-direction: column; /* Stack sections vertically */
+                align-items: center; /* Center-align for smaller screens */
             }
 
             .left-section,
             .middle-section,
             .right-section {
-                max-width: 100%;
+                max-width: 100%; /* Full width for each section */
                 text-align: center;
             }
 
             .robot-actions {
-                margin: 0 auto;
+                margin: 0 auto; /* Center the Robot Actions */
             }
         }
   </style>

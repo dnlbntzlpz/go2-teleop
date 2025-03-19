@@ -2,6 +2,14 @@ import threading
 import logging
 import time
 from unitree_sdk2py.go2.sport.sport_client import SportClient
+import cyclonedds
+from cyclonedds.domain import DomainParticipant
+from cyclonedds.sub import Subscriber
+from cyclonedds.sub import DataReader
+from cyclonedds.topic import Topic
+from cyclonedds.pub import Publisher
+from cyclonedds.pub import DataWriter
+from unitree_sdk2py.idl.unitree_go.msg.dds_ import BmsState_
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +23,8 @@ class RobotControl:
         self.y_speed = 0
         self.yaw_speed = 0
         self.lock = threading.Lock()
+        self.battery_percentage = None
+        self._start_bms_listener()
 
     def initialize(self):
         try:
@@ -92,3 +102,35 @@ class RobotControl:
     def switch_gait(self, gait_type):
         if self.client:
             self.client.SwitchGait(gait_type)
+
+    def sit(self):
+        if self.client:
+            self.client.Sit()
+
+    def _start_bms_listener(self):
+        def listen():
+            try:
+                participant = DomainParticipant()
+                subscriber = Subscriber(participant)
+                topic = Topic(participant, "BmsStateTopic", BmsState_)
+                reader = DataReader(subscriber, topic)
+
+                print("Started listening to BmsStateTopic...")
+                for sample in reader.take_iter():
+                    print(f"Sample received: {sample}")
+                    bms_state = sample.data
+                    print(f"Received BmsState: {bms_state}")
+                    self.battery_percentage = bms_state.soc  # Update battery percentage
+                    print(f"Updated battery percentage to {self.battery_percentage}%")
+            except Exception as e:
+                print(f"Error in BMS listener: {e}")
+
+        thread = threading.Thread(target=listen, daemon=True)
+        thread.start()
+
+
+
+    def get_battery_status(self):
+        """Return the latest battery percentage."""
+        print(f"Debug: Current battery_percentage: {self.battery_percentage}")
+        return self.battery_percentage
