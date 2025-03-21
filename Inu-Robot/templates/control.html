@@ -14,6 +14,137 @@
             background-color: #121212; /* Dark background */
             color: #e0e0e0; /* Light text for contrast */
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            height: 100vh; /* Make body full height of viewport */
+            overflow-x: hidden; /* Prevent horizontal scrolling */
+            width: 100vw; /* Full width of viewport */
+            box-sizing: border-box; /* Include padding in width/height */
+        }
+    
+        html {
+            height: 100%;
+            width: 100%;
+            overflow-x: hidden; /* Prevent horizontal scrolling at document level */
+        }
+    
+        /* Three-column layout structure */
+        .main-container {
+            display: flex;
+            flex-direction: row; /* Horizontal layout for columns */
+            gap: 10px; /* Reduce gap to prevent overflow */
+            width: 100%; /* Full width */
+            height: calc(100vh - 60px); /* Full height minus header */
+            padding: 10px; /* Reduce padding */
+            box-sizing: border-box; /* Include padding in width/height */
+            overflow-x: hidden; /* Prevent horizontal scrolling */
+            margin: 0; /* Reset any margin */
+            max-width: none; /* Remove max-width constraint */
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            height: 60px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+    
+        .header h1 {
+            font-size: 2rem;
+            background: linear-gradient(90deg, #9575cd, #81c784); /* Lighter gradient colors */
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            margin: 0; /* Remove default margin */
+        }
+
+        .column {
+            flex: 1; /* Each column takes equal space by default */
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* Reduce gap to prevent overflow */
+            height: 100%; /* Full height of container */
+            overflow-y: auto; /* Allow vertical scrolling within columns */
+            overflow-x: hidden; /* Prevent horizontal scrolling */
+            box-sizing: border-box; /* Include padding in width/height */
+            padding: 5px; /* Add minimal padding */
+        }
+
+        .left-column {
+            flex: 1.2; /* Give a bit more space to the camera column */
+        }
+
+        .middle-column {
+            flex: 1;
+        }
+
+        .right-column {
+            flex: 0.8; /* Slightly narrower column for status/history */
+        }
+
+        /* Fix video feeds sizing */
+        .video-feeds {
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* Reduce gap */
+            width: 100%;
+            box-sizing: border-box; /* Include padding in width/height */
+            overflow: hidden; /* Prevent overflow */
+        }
+
+        .video-feed {
+            width: 100%;
+            position: relative;
+            box-sizing: border-box; /* Include padding in width/height */
+            margin-bottom: 10px;
+            overflow: hidden; /* Prevent overflow */
+        }
+
+        .video-feed img {
+            width: 100%;
+            height: auto;
+            display: block; /* Remove inline spaces */
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .video-feed h3, .video-feed p {
+            margin: 5px 0; /* Reduce margins */
+        }
+
+        /* Status panel adjustments */
+        .status-dashboard, .status-panel {
+            max-height: none; /* Remove fixed height */
+            flex: 1; /* Allow flexible growth */
+            display: flex;
+            flex-direction: column;
+        }
+
+        #commandHistoryList {
+            flex: 1; /* Allow list to expand */
+            overflow-y: auto; /* Scrollable history */
+            max-height: none; /* Remove fixed height limit */
+        }
+    
+        /* Media Query for Smaller Screens */
+        @media (max-width: 1200px) {
+            .main-container {
+                flex-direction: column;
+                height: auto;
+                overflow-y: auto;
+            }
+
+            .column {
+                width: 100%;
+                max-width: 100%;
+                overflow-x: hidden;
+            }
+            
+            .video-feed {
+                padding-bottom: 40%; /* Reduce aspect ratio on small screens */
+            }
         }
     
         a {
@@ -25,22 +156,6 @@
             max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
-        }
-    
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-    
-        .header h1 {
-            font-size: 2rem;
-            background: linear-gradient(90deg, #9575cd, #81c784); /* Lighter gradient colors */
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 700;
         }
     
         .button {
@@ -85,31 +200,45 @@
 
         .main-container {
             display: flex;
-            flex-direction: column; /* Stack sections vertically */
-            align-items: center; /* Center-align content */
-            gap: 20px; /* Add space between sections */
+            flex-direction: row; /* Horizontal layout for the 3 columns */
+            gap: 20px; /* Space between columns */
+            width: 100%;
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px;
         }
 
-        .left-section,
-        .middle-section,
-        .right-section {
-            flex: 1; /* Allow each section to take equal space */
-            min-width: 300px; /* Ensure sections do not shrink too small */
-            max-width: 33%; /* Prevent sections from growing too large */
+        .column {
+            flex: 1; /* Each column takes equal space by default */
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
 
-        .left-section {
-            text-align: left; /* Align text to the left */
+        .left-column {
+            flex: 1.2; /* Give a bit more space to the camera column */
         }
 
-        .middle-section {
-            display: flex; /* Center-align Robot Actions */
-            justify-content: center;
-            text-align: center;
+        .middle-column {
+            flex: 1;
         }
 
-        .right-section {
-            text-align: right; /* Align text to the right */
+        .right-column {
+            flex: 0.8; /* Slightly narrower column for status/history */
+        }
+
+        /* Adjust video feeds to stack vertically */
+        .video-feeds {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .video-feed {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 16/9; /* Maintain aspect ratio */
         }
 
         /* Command History */
@@ -147,13 +276,6 @@
             justify-content: center;
             gap: 20px;
             padding: 20px;
-        }
-
-        .video-feed {
-            width: 640px;
-            height: 360px;
-            text-align: center;
-            overflow: hidden;
         }
 
         .video-feed img {
@@ -398,11 +520,14 @@
         .keyboard-controls {
             flex: 1;
             background: #1e1e1e; /* Darker background */
-            padding: 15px;
+            padding: 10px;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             text-align: center;
             display: inline-block;
+            width: 100%;
+            box-sizing: border-box; /* Include padding in width/height */
+            overflow: hidden; /* Prevent overflow */
         }
 
         .keyboard-controls h3 {
@@ -414,8 +539,11 @@
 
         .key-row {
             display: flex;
-            gap: 10px;
+            gap: 5px; /* Reduce gap */
             justify-content: center;
+            margin: 5px 0; /* Add margin between rows */
+            width: 100%;
+            box-sizing: border-box; /* Include padding in width/height */
         }
     
         .keyboard-row, .arrow-keys {
@@ -522,10 +650,13 @@
         
         .control-list {
             flex: 1;
-            padding: 15px;
+            padding: 10px;
             background: #1e1e1e; /* Darker background */
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            box-sizing: border-box; /* Include padding in width/height */
+            overflow: hidden; /* Prevent overflow */
         }
 
         .control-list h3 {
@@ -554,28 +685,157 @@
             font-size: 1rem;
             color: #e0e0e0; /* Light text color */
         }
-    
-        /* Media Query for Smaller Screens */
-        @media (max-width: 768px) {
-            .video-feed {
-                width: 100%;
-                height: auto;
-            }
 
-            .controls-container {
-                flex-direction: column;
-                align-items: center;
-            }
+        /* Fix center column containers to have consistent sizing */
+        .middle-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
 
-            .left-section,
-            .middle-section,
-            .right-section {
-                max-width: 100%;
-                text-align: center;
-            }
+        .middle-column > div {
+            flex: 0 0 auto; /* Don't flex the elements */
+            margin-bottom: 15px; /* Consistent spacing */
+            width: 100%; /* Full width */
+            background: #1e1e1e;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            box-sizing: border-box;
+            min-height: 220px; /* Set a consistent minimum height */
+        }
 
-            .robot-actions {
-                margin: 0 auto;
+        /* Make keyboard container narrower */
+        .keyboard-controls {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .keyboard-grid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 0;
+        }
+
+        .key-row {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin: 3px 0;
+        }
+
+        .key {
+            width: 45px; /* Slightly smaller keys */
+            height: 45px;
+            background: #333333;
+            border: 2px solid #555555;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: monospace;
+            font-size: 16px;
+            color: #e0e0e0;
+        }
+
+        /* Make control list size match */
+        .control-list {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-list h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #e0e0e0;
+            text-align: center;
+        }
+
+        .control-list ul {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 0;
+            margin: 0;
+            list-style-type: none;
+        }
+
+        .control-list li {
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            margin: 3px 0;
+        }
+
+        .control-list li strong {
+            width: 100px;
+            font-size: 0.95rem;
+            color: #e0e0e0;
+            font-weight: 600;
+        }
+
+        /* Make robot actions match other containers */
+        .robot-actions {
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .robot-actions h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .actions-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .status-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            min-height: 100px;
+        }
+
+        .status-button svg {
+            width: 35px;
+            height: 35px;
+            margin-bottom: 5px;
+        }
+
+        .status-button .status-text {
+            font-size: 0.8rem;
+            margin-bottom: 3px;
+        }
+
+        .status-button .key-hint {
+            font-size: 0.75rem;
+        }
+
+        /* Add responsive fixes */
+        @media (max-width: 1200px) {
+            .middle-column > div,
+            .right-column > div {
+                margin-bottom: 15px;
+            }
+            
+            .status-button {
+                min-height: 100px;
             }
         }
   </style>
@@ -586,110 +846,59 @@
     </div>
 
     <div class="main-container">
-        <!-- Camera Streams -->
-        <div class="video-feeds">
-            <div class="video-feed">
-                <h3 class="camera-title">Front Camera</h3>
-                <img id="videoFeed" src="data:image/jpeg;base64,/9j/4AAQSkZJRg==" alt="Primary Video Stream">
-                <p class="video-label">Primary Camera</p>
-            </div>
-            <div class="video-feed">
-                <h3 class="camera-title">Back Camera</h3>
-                <img id="usbVideoFeed" src="data:image/jpeg;base64,/9j/4AAQSkZJRg==" alt="Secondary Video Stream">
-                <p class="video-label">Secondary Camera</p>
-            </div>
-        </div>
-    
-        <!-- Status Dashboard -->
-        <div class="status-dashboard">
-            <h4>Sensors & Status</h4>
-            <div class="status-row">
-                <div class="status-item">
-                    <span class="status-icon">🔥</span>
-                    <span class="status-label">Temp</span>
-                    <span class="status-value" id="status-temperature">--°C</span>
+        <!-- Left Column: Video Feeds -->
+        <div class="column left-column">
+            <div class="video-feeds">
+                <div class="video-feed">
+                    <h3 class="camera-title">Front Camera</h3>
+                    <img id="videoFeed" src="data:image/jpeg;base64,/9j/4AAQSkZJRg==" alt="Primary Video Stream">
+                    <p class="video-label">Primary Camera</p>
                 </div>
-                <div class="status-item">
-                    <span class="status-icon">🔋</span>
-                    <span class="status-label">Battery</span>
-                    <span class="status-value" id="status-battery">--%</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-icon">⏱️</span>
-                    <span class="status-label">Latency</span>
-                    <span class="status-value" id="status-latency">--ms</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-icon">🎥</span>
-                    <span class="status-label">FPS</span>
-                    <span class="status-value" id="status-fps">--</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-icon">📶</span>
-                    <span class="status-label">Connection</span>
-                    <span class="status-value" id="status-connection">WiFi</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-icon">📊</span>
-                    <span class="status-label">Signal</span>
-                    <span class="status-value" id="status-signal">85%</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-icon">🎮</span>
-                    <span class="status-label">Gamepad</span>
-                    <span class="status-value" id="status-controller">Disconnected</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-icon">🔄</span>
-                    <span class="status-label">CPU Load</span>
-                    <span class="status-value" id="status-cpu">0%</span>
+                <div class="video-feed">
+                    <h3 class="camera-title">Back Camera</h3>
+                    <img id="usbVideoFeed" src="data:image/jpeg;base64,/9j/4AAQSkZJRg==" alt="Secondary Video Stream">
+                    <p class="video-label">Secondary Camera</p>
                 </div>
             </div>
         </div>
 
-<!-- Controls Section -->
-<div class="controls">
-    <div class="controls-container">
-        <!-- Left Section: Controls -->
-        <div class="left-section">
-            <div class="keyboard-controls-container">
-                <div class="keyboard-controls">
-                    <h3>Keyboard</h3>
-                    <div class="keyboard-grid">
-                        <div class="key-row"><div class="key" id="keyW" data-command="move-up">W</div></div>
-                        <div class="key-row">
-                            <div class="key" id="keyA" data-command="move-left">A</div>
-                            <div class="key" id="keyS" data-command="move-down">S</div>
-                            <div class="key" id="keyD" data-command="move-right">D</div>
-                        </div>
-                        <div class="key-row">
-                            <div class="key" id="keyArrowLeft" data-command="rotate-left">←</div>
-                            <div class="key" id="keyArrowRight" data-command="rotate-right">→</div>
-                        </div>
+        <!-- Middle Column: Controls -->
+        <div class="column middle-column">
+            <!-- Keyboard Controls -->
+            <div class="keyboard-controls">
+                <h3>Keyboard</h3>
+                <div class="keyboard-grid">
+                    <div class="key-row"><div class="key" id="keyW" data-command="move-up">W</div></div>
+                    <div class="key-row">
+                        <div class="key" id="keyA" data-command="move-left">A</div>
+                        <div class="key" id="keyS" data-command="move-down">S</div>
+                        <div class="key" id="keyD" data-command="move-right">D</div>
+                    </div>
+                    <div class="key-row">
+                        <div class="key" id="keyArrowLeft" data-command="rotate-left">←</div>
+                        <div class="key" id="keyArrowRight" data-command="rotate-right">→</div>
                     </div>
                 </div>
-
-                <!-- Keyboard Control List -->
-                <div class="control-list">
-                    <h3>Keyboard Controls</h3>
-                    <ul>
-                        <li><strong>W</strong>: Move Forward</li>
-                        <li><strong>S</strong>: Move Backward</li>
-                        <li><strong>A</strong>: Move Left</li>
-                        <li><strong>D</strong>: Move Right</li>
-                        <li><strong>Arrow Up</strong>: Stand Up</li>
-                        <li><strong>Arrow Down</strong>: Lay Down</li>
-                        <li><strong>B</strong>: Balance</li>
-                        <li><strong>X</strong>: Sit Down</li>
-                        <li><strong>Arrow Left</strong>: Rotate Left</li>
-                        <li><strong>Arrow Right</strong>: Rotate Right</li>
-                    </ul>
-                </div>
             </div>
-        </div>
 
-        <!-- Middle Section: Robot Actions -->
-        <div class="middle-section">
+            <!-- Keyboard Control List -->
+            <div class="control-list">
+                <h3>Keyboard Controls</h3>
+                <ul>
+                    <li><strong>W</strong>: Move Forward</li>
+                    <li><strong>S</strong>: Move Backward</li>
+                    <li><strong>A</strong>: Move Left</li>
+                    <li><strong>D</strong>: Move Right</li>
+                    <li><strong>Arrow Up</strong>: Stand Up</li>
+                    <li><strong>Arrow Down</strong>: Lay Down</li>
+                    <li><strong>B</strong>: Balance</li>
+                    <li><strong>X</strong>: Sit Down</li>
+                    <li><strong>Arrow Left</strong>: Rotate Left</li>
+                    <li><strong>Arrow Right</strong>: Rotate Right</li>
+                </ul>
+            </div>
+
+            <!-- Robot Actions -->
             <div class="robot-actions">
                 <h3>Robot Actions</h3>
                 <div class="actions-grid">
@@ -729,8 +938,56 @@
             </div>
         </div>
 
-        <!-- Right Section: Command History -->
-        <div class="right-section">
+        <!-- Right Column: Status and Command History -->
+        <div class="column right-column">
+            <!-- Sensors & Status Dashboard -->
+            <div class="status-dashboard">
+                <h4>Sensors & Status</h4>
+                <div class="status-row">
+                    <div class="status-item">
+                        <span class="status-icon">🔥</span>
+                        <span class="status-label">Temp</span>
+                        <span class="status-value" id="status-temperature">--°C</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-icon">🔋</span>
+                        <span class="status-label">Battery</span>
+                        <span class="status-value" id="status-battery">--%</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-icon">⏱️</span>
+                        <span class="status-label">Latency</span>
+                        <span class="status-value" id="status-latency">--ms</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-icon">🎥</span>
+                        <span class="status-label">FPS</span>
+                        <span class="status-value" id="status-fps">--</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-icon">📶</span>
+                        <span class="status-label">Connection</span>
+                        <span class="status-value" id="status-connection">WiFi</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-icon">📊</span>
+                        <span class="status-label">Signal</span>
+                        <span class="status-value" id="status-signal">85%</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-icon">🎮</span>
+                        <span class="status-label">Gamepad</span>
+                        <span class="status-value" id="status-controller">Disconnected</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-icon">🔄</span>
+                        <span class="status-label">CPU Load</span>
+                        <span class="status-value" id="status-cpu">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Command History -->
             <div class="status-panel">
                 <h3>Command History</h3>
                 <ul id="commandHistoryList" style="list-style-type: none; padding: 0; margin: 0; max-height: 400px; overflow-y: auto;">
@@ -738,7 +995,6 @@
             </div>
         </div>
     </div>
-</div>
 
    <script>
     const socket = io({
