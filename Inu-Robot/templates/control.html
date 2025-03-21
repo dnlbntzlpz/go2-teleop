@@ -673,17 +673,21 @@
         }
 
         .control-list li {
-            margin: 5px 0;
-            font-size: 1rem;
-            color: #b0b0b0; /* Slightly dimmer text */
+            font-size: 0.95rem;
             display: flex;
             align-items: center;
+            margin: 3px 0;
+            justify-content: flex-start; /* Left-align the content instead of centering */
+            text-align: left; /* Left-align the text */
         }
 
         .control-list li strong {
-            width: 80px;
-            font-size: 1rem;
-            color: #e0e0e0; /* Light text color */
+            width: 100px;
+            font-size: 0.95rem;
+            color: #e0e0e0;
+            font-weight: 600;
+            text-align: left; /* Change back to left alignment */
+            margin-right: 10px; /* Keep space between label and value */
         }
 
         /* Fix center column containers to have consistent sizing */
@@ -691,12 +695,14 @@
             flex: 1;
             display: flex;
             flex-direction: column;
+            align-items: center; /* Center the child elements horizontally */
         }
 
         .middle-column > div {
             flex: 0 0 auto; /* Don't flex the elements */
             margin-bottom: 15px; /* Consistent spacing */
             width: 100%; /* Full width */
+            max-width: 400px; /* Set a consistent maximum width */
             background: #1e1e1e;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
@@ -709,6 +715,10 @@
         .keyboard-controls {
             text-align: center;
             margin-bottom: 15px;
+            max-width: 400px; /* Match the max-width of robot-actions */
+            width: 100%; /* Take full available width up to max-width */
+            margin-left: auto; /* Center the container */
+            margin-right: auto; /* Center the container */
         }
 
         .keyboard-grid {
@@ -744,6 +754,10 @@
         .control-list {
             display: flex;
             flex-direction: column;
+            max-width: 400px; /* Match the max-width of robot-actions */
+            width: 100%; /* Take full available width up to max-width */
+            margin-left: auto; /* Center the container */
+            margin-right: auto; /* Center the container */
         }
 
         .control-list h3 {
@@ -950,11 +964,6 @@
                         <span class="status-value" id="status-temperature">--°C</span>
                     </div>
                     <div class="status-item">
-                        <span class="status-icon">🔋</span>
-                        <span class="status-label">Battery</span>
-                        <span class="status-value" id="status-battery">--%</span>
-                    </div>
-                    <div class="status-item">
                         <span class="status-icon">⏱️</span>
                         <span class="status-label">Latency</span>
                         <span class="status-value" id="status-latency">--ms</span>
@@ -963,11 +972,6 @@
                         <span class="status-icon">🎥</span>
                         <span class="status-label">FPS</span>
                         <span class="status-value" id="status-fps">--</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-icon">📶</span>
-                        <span class="status-label">Connection</span>
-                        <span class="status-value" id="status-connection">WiFi</span>
                     </div>
                     <div class="status-item">
                         <span class="status-icon">📊</span>
@@ -1008,10 +1012,10 @@
         const usbVideoFeed = document.getElementById('usbVideoFeed');
         const latencySpan = document.getElementById('latency');
         const fpsSpan = document.getElementById('fps');
-        const indicator = document.getElementById('joystickIndicator');
-        const statusText = document.getElementById('joystickStatus');
-        const cameraStatusDot = document.getElementById('cameraStatusDot');
-        const cameraStatusText = document.getElementById('cameraStatusText');
+        const indicator = null;
+        const statusText = null;
+        const cameraStatusDot = null;
+        const cameraStatusText = null;
 
         let robotState = {
             isStanding: false,
@@ -1171,17 +1175,39 @@
         socket.on('connect', () => {
             console.log('Connected to server');
             statusData.connection = 'Connected';
-            document.getElementById('status-connection').textContent = statusData.connection;
-            cameraStatusDot.style.backgroundColor = '#4CAF50';
-            cameraStatusText.textContent = 'Connected';
+            
+            // Check if the elements exist before trying to access them
+            const connectionElement = document.getElementById('status-connection');
+            if (connectionElement) {
+                connectionElement.textContent = statusData.connection;
+            }
+            
+            if (cameraStatusDot) {
+                cameraStatusDot.style.backgroundColor = '#4CAF50';
+            }
+            
+            if (cameraStatusText) {
+                cameraStatusText.textContent = 'Connected';
+            }
         });
 
         socket.on('disconnect', () => {
             console.log('Disconnected from server');
             statusData.connection = 'Disconnected';
-            document.getElementById('status-connection').textContent = statusData.connection;
-            cameraStatusDot.style.backgroundColor = 'red';
-            cameraStatusText.textContent = 'Disconnected';
+            
+            // Check if the elements exist before trying to access them
+            const connectionElement = document.getElementById('status-connection');
+            if (connectionElement) {
+                connectionElement.textContent = statusData.connection;
+            }
+            
+            if (cameraStatusDot) {
+                cameraStatusDot.style.backgroundColor = 'red';
+            }
+            
+            if (cameraStatusText) {
+                cameraStatusText.textContent = 'Disconnected';
+            }
         });
 
         function applyDeadzone(value, deadzone) {
@@ -1206,13 +1232,34 @@
                 }
 
                 if (now - lastDisplayUpdate >= DISPLAY_UPDATE_INTERVAL) {
-                    statusText.textContent = `Connected: ${gamepad.id}`;
-                    indicator.style.backgroundColor = '#4CAF50';
+                    // Check if statusText exists before trying to access it
+                    if (statusText) {
+                        statusText.textContent = `Connected: ${gamepad.id}`;
+                    }
+                    // Check if indicator exists before trying to access it
+                    if (indicator) {
+                        indicator.style.backgroundColor = '#4CAF50';
+                    }
+                    // Update the controller status in the dashboard
+                    const controllerStatusElement = document.getElementById('status-controller');
+                    if (controllerStatusElement) {
+                        controllerStatusElement.textContent = `Connected: ${gamepad.id}`;
+                    }
                     lastDisplayUpdate = now;
                 }
             } else {
-                statusText.textContent = 'No Gamepad Detected';
-                indicator.style.backgroundColor = '#dc3545';
+                // Check if elements exist before trying to access them
+                if (statusText) {
+                    statusText.textContent = 'No Gamepad Detected';
+                }
+                if (indicator) {
+                    indicator.style.backgroundColor = '#dc3545';
+                }
+                // Update controller status in dashboard
+                const controllerStatusElement = document.getElementById('status-controller');
+                if (controllerStatusElement) {
+                    controllerStatusElement.textContent = 'Disconnected';
+                }
             }
         }
 
@@ -1677,12 +1724,35 @@
         // Function to update status dashboard
         function updateStatusDashboard() {
             console.log('Status Data:', statusData); // Debugging
-            document.getElementById('status-latency').textContent = `${statusData.latency} ms`;
-            document.getElementById('status-fps').textContent = statusData.fps || '--';
-            document.getElementById('status-battery').textContent = `${statusData.battery || '--'}%`;
-            document.getElementById('status-temperature').textContent = `${statusData.temperature || '--'} °C`;
-            document.getElementById('status-connection').textContent = statusData.connection || '--';
-            document.getElementById('status-cpu').textContent = `${statusData.cpu || '--'}%`;
+            
+            // Add null checks for all status elements
+            if (document.getElementById('status-latency')) {
+                document.getElementById('status-latency').textContent = `${statusData.latency} ms`;
+            }
+            
+            if (document.getElementById('status-fps')) {
+                document.getElementById('status-fps').textContent = statusData.fps || '--';
+            }
+            
+            // The battery element doesn't exist in your HTML, so we need to check
+            const batteryElement = document.getElementById('status-battery');
+            if (batteryElement) {
+                batteryElement.textContent = `${statusData.battery || '--'}%`;
+            }
+            
+            if (document.getElementById('status-temperature')) {
+                document.getElementById('status-temperature').textContent = `${statusData.temperature || '--'} °C`;
+            }
+            
+            // The connection element doesn't exist in your HTML, so we need to check
+            const connectionElement = document.getElementById('status-connection');
+            if (connectionElement) {
+                connectionElement.textContent = statusData.connection || '--';
+            }
+            
+            if (document.getElementById('status-cpu')) {
+                document.getElementById('status-cpu').textContent = `${statusData.cpu || '--'}%`;
+            }
         }
 
    </script>
