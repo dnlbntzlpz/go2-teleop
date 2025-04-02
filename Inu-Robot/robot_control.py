@@ -1,6 +1,7 @@
 import threading
 import logging
 import time
+import json
 from unitree_sdk2py.go2.sport.sport_client import SportClient
 import cyclonedds
 from cyclonedds.domain import DomainParticipant
@@ -24,6 +25,7 @@ class RobotControl:
         self.yaw_speed = 0
         self.lock = threading.Lock()
         self.battery_percentage = None
+        self.trajectory = [] #Almacena trayectoria realizada 
         self._start_bms_listener()
 
     def initialize(self):
@@ -57,39 +59,39 @@ class RobotControl:
                 # Always send movement commands
                 if y_speed != 0 or x_speed != 0 or yaw_speed != 0:
                     self.client.Move(y_speed, x_speed, yaw_speed)
+                    self._record_step(x_speed, y_speed, yaw_speed)
             except Exception as e:
                 logger.error(f"Error sending Move command: {e}")
             time.sleep(0.02)  # Sleep for 20ms
 
     def set_speeds(self, x_speed, y_speed, yaw_speed):
+        MAX_SPEED = 1.0
+        x_speed = max(min(x_speed, MAX_SPEED), -MAX_SPEED)
+        y_speed = max(min(y_speed, MAX_SPEED), -MAX_SPEED)
+        yaw_speed = max(min(yaw_speed, MAX_SPEED), -MAX_SPEED)
+
         with self.lock:
             self.x_speed = x_speed
             self.y_speed = y_speed
             self.yaw_speed = yaw_speed
 
     def stand_up(self):
-        with self.lock:
-            self.x_speed = 0
-            self.y_speed = 0
-            self.yaw_speed = 0
+        self._reset_speeds()
         if self.client:
             self.client.StandUp()
 
+
     def stand_down(self):
-        with self.lock:
-            self.x_speed = 0
-            self.y_speed = 0
-            self.yaw_speed = 0
+        self._reset_speeds()
         if self.client:
             self.client.StandDown()
 
+
     def stop_move(self):
-        with self.lock:
-            self.x_speed = 0
-            self.y_speed = 0
-            self.yaw_speed = 0
+        self._reset_speeds()
         if self.client:
             self.client.StopMove()
+
 
     def balance_stand(self):
         if self.client:
@@ -106,25 +108,30 @@ class RobotControl:
     def sit(self):
         if self.client:
             self.client.Sit()
+    
+    def power_off(self):
+        if self.client:
+            logger.info("Powering off the robot...")
+            self.client.PowerOff()
 
     def _start_bms_listener(self):
         def listen():
-            try:
-                participant = DomainParticipant()
-                subscriber = Subscriber(participant)
-                topic = Topic(participant, "BmsStateTopic", BmsState_)
-                reader = DataReader(subscriber, topic)
+            while True:
+                try:
+                    participant = DomainParticipant()
+                    subscriber = Subscriber(participant)
+                    topic = Topic(participant, "BmsStateTopic", BmsState_)
+                    reader = DataReader(subscriber, topic)
 
-                print("Started listening to BmsStateTopic...")
-                for sample in reader.take_iter():
-                    print(f"Sample received: {sample}")
-                    bms_state = sample.data
-                    print(f"Received BmsState: {bms_state}")
-                    self.battery_percentage = bms_state.soc  # Update battery percentage
-                    print(f"Updated battery percentage to {self.battery_percentage}%")
-            except Exception as e:
-                print(f"Error in BMS listener: {e}")
+                    logger.info("Listening to BmsStateTopic...")
+                    for sample in reader.take_iter():
+                        if sample and sample.valid_data:
+                            self.battery_percentage = sample.data.soc
+                            logger.info(f"Battery updated: {self.battery_percentage}%")
 
+                except Exception as e:
+                        logger.error(f"Error in BMS listener: {e}")
+                        time.sleep(5)
         thread = threading.Thread(target=listen, daemon=True)
         thread.start()
 
@@ -132,5 +139,45 @@ class RobotControl:
 
     def get_battery_status(self):
         """Return the latest battery percentage."""
-        print(f"Debug: Current battery_percentage: {self.battery_percentage}")
+        logger.debug(f"Current battery_percentage: {self.battery_percentage}")
         return self.battery_percentage
+    def _record_step(self, x_speed, y_speed, yaw_speed):
+        step = {
+            "x_speed": x_speed,
+            "y_speed": y_speed,
+            "yaw_speed": yaw_speed,
+            "timestamp": time.time()
+        }
+        self.trajectory.append(step)
+        logger.debug(f"Recorded step: {step}")
+
+    def save_trajectory(self, filename="trajectory.json"):
+        with open(filename, "w") as file:
+            json.dump(self.trajectory, file)
+        logger.info(f"Trajectory saved to {filename}")
+
+    def load_trajectory(self, filename="trajectory.json"):
+        try:
+            with open(filename, "r") as file:
+                self.trajectory = json.load(file)
+            logger.info(f"Trajectory loaded from {filename}")
+        except Exception as e:
+            logger.error(f"Error loading trajectory: {e}")
+
+    def follow_trajectory(self):
+        if not self.trajectory:
+            logger.warning("No trajectory to follow.")
+            return
+
+        for step in self.trajectory:
+            self.set_speeds(step["x_speed"], step["y_speed"], step["yaw_speed"])
+            time.sleep(0.02)  # Mantiene la sincronización de los pasos
+    
+        self.stop_move()  # Detiene el robot al final
+
+    def _reset_speeds(self):
+        with self.lock:
+            self.x_speed = 0
+            self.y_speed = 0
+            self.yaw_speed = 0
+
