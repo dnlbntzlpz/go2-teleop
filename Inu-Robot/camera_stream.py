@@ -3,6 +3,7 @@ import numpy as np
 import base64
 import time
 import logging
+from ultralytics import YOLO
 from unitree_sdk2py.go2.video.video_client import VideoClient
 
 logger = logging.getLogger(__name__)
@@ -20,6 +21,7 @@ class RobotCameraConfig:
         self.last_frame_time = 0
         self.frame_count = 0
         self.socketio = None  # Add socketio as instance variable
+        self.model = YOLO("yolov8n.pt")  # Load YOLO model
 
     def set_socketio(self, socketio):
         self.socketio = socketio
@@ -45,10 +47,10 @@ class RobotCameraConfig:
     def cleanup(self):
         self.running = False
         if self.client is not None:
-            pass
+            self.client.Close()
 
     def process_frames(self):
-        """Optimized frame capture and processing"""
+        """Optimized frame capture, processing and object detection"""
         skip_count = 0
 
         while self.running:
@@ -77,9 +79,13 @@ class RobotCameraConfig:
                     # Resize frame to reduce processing load
                     frame = cv2.resize(frame, (self.width, self.height))
 
+                    # Object detection with YOLO
+                    results = self.model.predict(frame, imgsz=640, conf=0.7)
+                    annotated_frame = results[0].plot()
+
                     # Compress frame with lower quality
                     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), self.jpeg_quality]
-                    _, buffer = cv2.imencode('.jpg', frame, encode_param)
+                    _, buffer = cv2.imencode('.jpg', annotated_frame, encode_param)
 
                     # Emit frame
                     frame_data = base64.b64encode(buffer).decode('utf-8')
