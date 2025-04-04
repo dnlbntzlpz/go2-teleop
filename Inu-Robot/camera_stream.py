@@ -45,9 +45,10 @@ class RobotCameraConfig:
             return False
 
     def cleanup(self):
+        """Simple cleanup"""
         self.running = False
-        if self.client is not None:
-            self.client.Close()
+        self.client = None
+        logger.info("Camera cleanup completed")
 
     def process_frames(self):
         """Optimized frame capture, processing and object detection"""
