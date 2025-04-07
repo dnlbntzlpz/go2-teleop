@@ -7,6 +7,7 @@ from ultralytics import YOLO
 from unitree_sdk2py.go2.video.video_client import VideoClient
 from threading import Thread
 import queue
+import threading
 
 logger = logging.getLogger(__name__)
 
@@ -16,20 +17,20 @@ class RobotCameraConfig:
         self.height = height
         self.client = None
         self.running = False
-        self.target_fps = 30  # Aumentado FPS
+        self.target_fps = 30  # Increased FPS
         self.frame_interval = 1.0 / self.target_fps
-        self.jpeg_quality = 70  # Calidad mejorada pero no m�xima
-        self.skip_frames = 1  # Procesar todos los frames
+        self.jpeg_quality = 70  # Improved but not maximum quality
+        self.skip_frames = 1  # Process all frames
         self.last_frame_time = 0
         self.frame_count = 0
         self.socketio = None
         self.model = YOLO("yolov8n.pt")
         
-        # Buffer para frames
+        # Frame buffer
         self.frame_queue = queue.Queue(maxsize=2)
         self.processed_queue = queue.Queue(maxsize=2)
         
-        # Configuraci�n de procesamiento
+        # Processing configuration
         self.detection_enabled = True
         self.processing_thread = None
         self.emission_thread = None
@@ -51,7 +52,7 @@ class RobotCameraConfig:
 
             self.running = True
             
-            # Iniciar hilos de procesamiento
+            # Start processing threads
             self.processing_thread = Thread(target=self._process_frames_thread, daemon=True)
             self.emission_thread = Thread(target=self._emit_frames_thread, daemon=True)
             self.processing_thread.start()
@@ -63,7 +64,7 @@ class RobotCameraConfig:
             return False
 
     def _capture_frame(self):
-        """Captura un frame y lo preprocesa"""
+        """Captures and preprocesses a frame"""
         code, data = self.client.GetImageSample()
         if code == 0:
             image_data = np.frombuffer(bytes(data), dtype=np.uint8)
@@ -73,7 +74,7 @@ class RobotCameraConfig:
         return None
 
     def _process_frames_thread(self):
-        """Thread dedicado al procesamiento de frames"""
+        """Thread dedicated to frame processing"""
         while self.running:
             try:
                 frame = self._capture_frame()
@@ -84,23 +85,23 @@ class RobotCameraConfig:
                     else:
                         processed_frame = frame
 
-                    # Optimizar la compresi�n
+                    # Optimize compression
                     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), self.jpeg_quality]
                     _, buffer = cv2.imencode('.jpg', processed_frame, encode_param)
                     frame_data = base64.b64encode(buffer).decode('utf-8')
 
-                    # Usar queue con timeout para evitar bloqueos
+                    # Use queue with timeout to avoid blocking
                     try:
                         self.processed_queue.put(frame_data, timeout=0.1)
                     except queue.Full:
-                        self.processed_queue.get_nowait()  # Eliminar frame antiguo
+                        self.processed_queue.get_nowait()  # Remove old frame
                         self.processed_queue.put(frame_data)
             except Exception as e:
                 logger.error(f"Frame processing error: {str(e)}")
                 time.sleep(0.01)
 
     def _emit_frames_thread(self):
-        """Thread dedicado a la emisi�n de frames"""
+        """Thread dedicated to frame emission"""
         while self.running:
             try:
                 frame_data = self.processed_queue.get(timeout=0.1)
@@ -131,14 +132,35 @@ class RobotCameraConfig:
         logger.info("Camera cleanup completed")
 
     def toggle_detection(self, enabled=True):
-        """Activar/desactivar detecci�n de objetos"""
+        """Enable/disable object detection"""
         self.detection_enabled = enabled
+
+    def process_frames(self):
+        """Compatibility method to start processing"""
+        if not self.initialize():
+            logger.error("Failed to initialize camera")
+            return
+        
+        try:
+            while self.running:
+                time.sleep(0.1)  # Small pause to avoid CPU consumption
+        except KeyboardInterrupt:
+            logger.info("Camera processing stopped by user")
+        finally:
+            self.cleanup()
 
 # Create a global camera_config instance
 camera_config = RobotCameraConfig()
 
-# Ajustar par�metros
-camera_config.width = 640  # Mayor resoluci�n
+# Adjust parameters
+camera_config.width = 640  # Higher resolution
 camera_config.height = 480
-camera_config.jpeg_quality = 80  # Mayor calidad
-camera_config.target_fps = 25  # FPS m�s bajo pero m�s estable
+camera_config.jpeg_quality = 80  # Higher quality
+camera_config.target_fps = 25  # Lower but more stable FPS
+
+# Option 1: Using initialize() directly
+camera_config.initialize()
+
+# Option 2: Using the process_frames method
+thread = threading.Thread(target=camera_config.process_frames)
+thread.start()
