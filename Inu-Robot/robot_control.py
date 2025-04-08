@@ -11,6 +11,7 @@ from cyclonedds.topic import Topic
 from cyclonedds.pub import Publisher
 from cyclonedds.pub import DataWriter
 from unitree_sdk2py.idl.unitree_go.msg.dds_ import BmsState_
+from Inu_Robot.ultrasonic import medir_distancia
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ class RobotControl:
         self.yaw_speed = 0
         self.lock = threading.Lock()
         self.battery_percentage = None
-        self.trajectory = [] #Almacena trayectoria realizada 
+        self.trajectory = []  
         self._start_bms_listener()
 
     def initialize(self):
@@ -35,7 +36,6 @@ class RobotControl:
             self.client.SetTimeout(10.0)
             self.client.Init()
             self.running = True
-            # Start the movement thread
             self.move_thread = threading.Thread(target=self._movement_loop)
             self.move_thread.daemon = True
             self.move_thread.start()
@@ -51,18 +51,26 @@ class RobotControl:
 
     def _movement_loop(self):
         while self.running:
-            with self.lock:
-                x_speed = self.x_speed
-                y_speed = self.y_speed
-                yaw_speed = self.yaw_speed
             try:
-                # Always send movement commands
-                if y_speed != 0 or x_speed != 0 or yaw_speed != 0:
-                    self.client.Move(y_speed, x_speed, yaw_speed)
-                    self._record_step(x_speed, y_speed, yaw_speed)
+                distancia = medir_distancia()
+                if distancia and distancia < 30:
+                    logger.warning(f"Obstáculo detectado a {distancia:.2f} cm. Deteniendo robot.")
+                    self.stop_move()
+                    time.sleep(1)
+                    self.set_speeds(0, -0.3, 0.5)  # retrocede y gira
+                    time.sleep(1.5)
+                    self.stop_move()
+                else:
+                    with self.lock:
+                        x_speed = self.x_speed
+                        y_speed = self.y_speed
+                        yaw_speed = self.yaw_speed
+                    if y_speed != 0 or x_speed != 0 or yaw_speed != 0:
+                        self.client.Move(y_speed, x_speed, yaw_speed)
+                        self._record_step(x_speed, y_speed, yaw_speed)
+                time.sleep(0.1)
             except Exception as e:
-                logger.error(f"Error sending Move command: {e}")
-            time.sleep(0.02)  # Sleep for 20ms
+                logger.error(f"Error en _movement_loop: {e}")
 
     def set_speeds(self, x_speed, y_speed, yaw_speed):
         MAX_SPEED = 1.0
