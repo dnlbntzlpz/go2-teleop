@@ -11,7 +11,7 @@ from cyclonedds.topic import Topic
 from cyclonedds.pub import Publisher
 from cyclonedds.pub import DataWriter
 from unitree_sdk2py.idl.unitree_go.msg.dds_ import BmsState_
-from Inu_Robot.ultrasonic import medir_distancia
+from ultrasonic import medir_distancia
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class RobotControl:
         while self.running:
             try:
                 distancia = medir_distancia()
-                if distancia and distancia < 30:
+                if distancia and distancia < 45:
                     logger.warning(f"Obstáculo detectado a {distancia:.2f} cm. Deteniendo robot.")
                     self.stop_move()
                     time.sleep(1)
@@ -149,6 +149,7 @@ class RobotControl:
         """Return the latest battery percentage."""
         logger.debug(f"Current battery_percentage: {self.battery_percentage}")
         return self.battery_percentage
+    
     def _record_step(self, x_speed, y_speed, yaw_speed):
         step = {
             "x_speed": x_speed,
