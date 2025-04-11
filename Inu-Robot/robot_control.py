@@ -139,7 +139,23 @@ class RobotControl:
         self.current_trajectory = trajectory
         self.trajectory_index = 0
         self.is_executing_trajectory = True
-        self.last_step_time = time.time()            
+        self.last_step_time = time.time() 
+
+    def _adjust_trajectory_after_obstacle(self):
+        if self.current_trajectory and self.trajectory_index > 0:
+            # Calcular nueva posición estimada después de la evasión
+            # Esto podría ser más sofisticado con odometría real
+            last_cmd = self.current_trajectory[self.trajectory_index-1]
+            adjusted_time = last_cmd['t'] + 2000  # Añadir tiempo de evasión
+            
+            # Insertar comandos de corrección
+            correction_cmd = {
+                't': adjusted_time,
+                'x': last_cmd['x'],
+                'y': last_cmd['y'],
+                'yaw': last_cmd['yaw']
+            }
+            self.current_trajectory.insert(self.trajectory_index, correction_cmd)           
 
     def set_speeds(self, x_speed, y_speed, yaw_speed):
         MAX_SPEED = 1.0
