@@ -887,6 +887,24 @@
             100% { opacity: 1; }
         }
 
+        .status-message {
+            margin: 10px 0;
+            padding: 8px;
+            background: #e9f7fe;
+            border-radius: 4px;
+            color: #31708f;
+        }
+
+        .alert-message {
+            margin: 10px 0;
+            padding: 8px;
+            background: #fcf8e3;
+            border-radius: 4px;
+            color: #8a6d3b;
+            border-left: 4px solid #faebcc;
+            display: none;
+        }   
+
   </style>
  </head>
  <body>
@@ -1044,6 +1062,9 @@
         <div id="trajectoriesList" class="trajectories-list"></div>
     </div>
 
+    <div id="trajectoryStatus" class="status-message"></div>
+    <div id="obstacleAlert" class="alert-message" style="display: none;"></div>
+
    <script>
     const socket = io({
             transports: ['websocket'],
@@ -1102,6 +1123,7 @@
         let currentTrajectory = [];
         let savedTrajectories = JSON.parse(localStorage.getItem('savedTrajectories')) || [];
         let recordingStartTime;
+        let obstacleAvoidanceMode = false;
 
         // Update the existing command send logic to add commands to the history
         function sendMovementCommand(x_speed, y_speed, yaw_speed) {
@@ -1170,18 +1192,54 @@
                 const trajectory = savedTrajectories[index];
                 console.log(`Reproduciendo: ${trajectory.name}`);
                 
-                let lastTime = 0;
-                trajectory.commands.forEach(cmd => {
-                    setTimeout(() => {
-                        sendMovementCommand(
-                            -cmd.x / max_speed, 
-                            -cmd.y / max_speed, 
-                            -cmd.yaw / max_speed
-                        );
-                    }, cmd.t - lastTime);
-                    lastTime = cmd.t;
+                // Enviar la trayectoria completa al backend
+                socket.emit('execute_trajectory', trajectory.commands);
+                
+                // Mostrar estado en UI
+                updateTrajectoryStatus(`Ejecutando: ${trajectory.name}`);
+                
+                // Escuchar eventos del backend
+                socket.on('trajectory_progress', (progress) => {
+                    updateTrajectoryStatus(`Ejecutando: ${trajectory.name} (${progress.current}/${progress.total})`);
+                    
+                    if (progress.obstacle_detected) {
+                        obstacleAvoidanceMode = true;
+                        showObstacleAlert(progress.distance);
+                    } else if (obstacleAvoidanceMode) {
+                        obstacleAvoidanceMode = false;
+                        hideObstacleAlert();
+                    }
+                });
+                
+                socket.on('trajectory_complete', () => {
+                    updateTrajectoryStatus("Trayectoria completada");
+                    socket.off('trajectory_progress');
+                    socket.off('trajectory_complete');
+                });
+                socket.on('obstacle_distance', (distance) => {
+                    updateDistanceDisplay(distance);
                 });
             }
+        }
+
+        function updateTrajectoryStatus(message) {
+            document.getElementById('trajectoryStatus').textContent = message;
+        }
+
+        function showObstacleAlert(distance) {
+            const alert = document.getElementById('obstacleAlert');
+            alert.textContent = `¡Obstáculo detectado a ${distance.toFixed(1)} cm! Evitando...`;
+            alert.style.display = 'block';
+        }
+
+        function hideObstacleAlert() {
+            document.getElementById('obstacleAlert').style.display = 'none';
+        }
+        
+        function updateDistanceDisplay(distance) {
+            const meter = document.getElementById('distanceMeter');
+            meter.value = distance;
+            meter.style.backgroundColor = distance < 45 ? '#ff6b6b' : '#4CAF50';
         }
 
         // Actualizar la lista en la UI
