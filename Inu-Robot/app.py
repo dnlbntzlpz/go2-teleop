@@ -230,7 +230,7 @@ if __name__ == '__main__':
         logger.info("ChannelFactory initialized successfully.")
     except Exception as e:
         logger.error(f"ChannelFactory initialization error: {str(e)}")
-        sys.exit(1)
+        #sys.exit(1)
 
     # Initialize Unitree Go2 camera
     camera_config.set_socketio(socketio)
@@ -259,6 +259,8 @@ if __name__ == '__main__':
     try:
         print(">>>>> Iniciando servidor Flask con SocketIO en puerto 8066...")
         socketio.run(app, host='0.0.0.0', port=8066, allow_unsafe_werkzeug=True, use_reloader=False)
+    except Exception as e:
+        logger.error(f"Fallo al iniciar el servidor: {e}")
     finally:
         # Cleanup resources
         if camera_config:
@@ -267,3 +269,4 @@ if __name__ == '__main__':
             usb_capture.release()
         if robot_control:
             robot_control.cleanup()
+
