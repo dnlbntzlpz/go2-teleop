@@ -257,6 +257,7 @@ if __name__ == '__main__':
     # Start Flask application with Socket.IO
     app.debug = True
     try:
+        print(">>>>> Iniciando servidor Flask con SocketIO en puerto 8066...")
         socketio.run(app, host='0.0.0.0', port=8066, allow_unsafe_werkzeug=True, use_reloader=False)
     finally:
         # Cleanup resources
