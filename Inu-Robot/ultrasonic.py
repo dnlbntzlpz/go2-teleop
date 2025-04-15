@@ -37,3 +37,10 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("Finalizando...")
         GPIO.cleanup()
+
+#from gpiozero import DistanceSensor
+#sensor = DistanceSensor(echo=24, trigger=23, max_distance=4, threshold_distance=0.03)
+
+#while True:
+    #if sensor.distance < 0.03:  # 3cm convertidos a metros
+        #print("¡Obstáculo detectado!")
