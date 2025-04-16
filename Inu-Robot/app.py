@@ -13,6 +13,16 @@ from unitree_sdk2py.go2.sport.sport_client import SportClient
 import psutil
 import subprocess
 
+import sys
+print("Python path:", sys.path)
+
+try:
+    from unitree_sdk2py.go2.sport.sport_client import SportClient
+    print("✅ ¡Importación desde app.py exitosa!")
+except ModuleNotFoundError as e:
+    print("❌ Error al importar:", e)
+    exit(1)
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
