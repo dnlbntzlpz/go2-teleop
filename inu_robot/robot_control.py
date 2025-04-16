@@ -11,7 +11,7 @@ from cyclonedds.topic import Topic
 from cyclonedds.pub import Publisher
 from cyclonedds.pub import DataWriter
 from unitree_sdk2py.idl.unitree_go.msg.dds_ import BmsState_
-from inu_robot.ultrasonic import medir_distancia
+from .ultrasonic import medir_distancia
 
 logger = logging.getLogger(__name__)
 

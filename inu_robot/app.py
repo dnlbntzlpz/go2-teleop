@@ -5,11 +5,11 @@ import base64
 import threading
 import time
 import logging
-from inu_robot.models import db
-from robot_control import RobotControl
-from camera_stream import camera_config  # Only import Unitree Go2 camera config
+from .models import db
+from .robot_control import RobotControl
+from .camera_stream import camera_config  # Only import Unitree Go2 camera config
 import sys
-import os
+import os 
 from unitree_sdk2py.core.channel import ChannelFactoryInitialize
 from unitree_sdk2py.go2.sport.sport_client import SportClient
 import psutil
