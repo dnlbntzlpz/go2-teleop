@@ -11,7 +11,7 @@
   <style>
    body {
             margin: 0;
-            background-color: #0004ff; /* Dark background */
+            background-color: #611e973a; /* Dark background */
             color: #e0e0e0; /* Light text for contrast */
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             height: 100vh; /* Make body full height of viewport */
@@ -852,69 +852,16 @@
                 min-height: 100px;
             }
         }
-
-        .trajectory-controls {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f5f5f5;
-            border-radius: 8px;
-        }
-
-        #recordBtn.recording {
-            background-color: #ff4444;
-            color: white;
-            animation: pulse 1s infinite;
-        }
-
-        .trajectories-list {
-            margin-top: 10px;
-        }
-
-        .trajectory-item {
-            display: flex;
-            align-items: center;
-            padding: 8px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .trajectory-item span {
-            flex-grow: 1;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
-        }
-
-        .status-message {
-            margin: 10px 0;
-            padding: 8px;
-            background: #e9f7fe;
-            border-radius: 4px;
-            color: #31708f;
-        }
-
-        .alert-message {
-            margin: 10px 0;
-            padding: 8px;
-            background: #fcf8e3;
-            border-radius: 4px;
-            color: #8a6d3b;
-            border-left: 4px solid #faebcc;
-            display: none;
-        }   
-
   </style>
  </head>
  <body>
     <div class="header">
-        <h1>Delivery Monitoring System</h1>
+        <h1>Robot Teleoperation System</h1>
     </div>
 
     <div class="main-container">
         <!-- Left Column: Video Feeds -->
-        <div class="column middle-column>
+        <div class="column left-column">
             <div class="video-feeds">
                 <div class="video-feed">
                     <h3 class="camera-title">Front Camera</h3>
@@ -930,7 +877,7 @@
         </div>
 
         <!-- Middle Column: Controls -->
-        <div class="column right-column>
+        <div class="column middle-column">
             <!-- Keyboard Controls -->
             <div class="keyboard-controls">
                 <h3>Keyboard</h3>
@@ -1006,7 +953,7 @@
         </div>
 
         <!-- Right Column: Status and Command History -->
-        <div class="column left-column">
+        <div class="column right-column">
             <!-- Sensors & Status Dashboard -->
             <div class="status-dashboard">
                 <h4>Sensors & Status</h4>
@@ -1052,18 +999,6 @@
             </div>
         </div>
     </div>
-
-    <div class="trajectory-controls">
-        <button id="recordBtn" onclick="toggleRecording()">
-            ⏺️ Grabar Trayectoria
-        </button>
-        
-        <h3>Trayectorias Guardadas</h3>
-        <div id="trajectoriesList" class="trajectories-list"></div>
-    </div>
-
-    <div id="trajectoryStatus" class="status-message"></div>
-    <div id="obstacleAlert" class="alert-message" style="display: none;"></div>
 
    <script>
     const socket = io({
@@ -1119,12 +1054,6 @@
             pendingFrame = false;
         };
 
-        let isRecording = false;
-        let currentTrajectory = [];
-        let savedTrajectories = JSON.parse(localStorage.getItem('savedTrajectories')) || [];
-        let recordingStartTime;
-        let obstacleAvoidanceMode = false;
-
         // Update the existing command send logic to add commands to the history
         function sendMovementCommand(x_speed, y_speed, yaw_speed) {
             const command = {
@@ -1137,134 +1066,7 @@
 
             // Add the command to the history
             //addCommandToHistory(`Move: X=${command.x_speed}, Y=${command.y_speed}, Yaw=${command.yaw_speed}`);
-
-            if (isRecording) {
-                const timestamp = Date.now() - recordingStartTime;
-                currentTrajectory.push({
-                    t: timestamp,  // tiempo relativo al inicio
-                    x: command.x_speed,
-                    y: command.y_speed,
-                    yaw: command.yaw_speed
-                });
-            }
         }
-
-        // Control de grabación
-        function toggleRecording() {
-            isRecording = !isRecording;
-            
-            if (isRecording) {
-                // Iniciar nueva grabación
-                recordingStartTime = Date.now();
-                currentTrajectory = [];
-                console.log("Comenzando grabación de trayectoria...");
-                document.getElementById('recordBtn').classList.add('recording');
-            } else {
-                // Finalizar grabación
-                console.log("Trayectoria grabada:", currentTrajectory);
-                document.getElementById('recordBtn').classList.remove('recording');
-                
-                // Guardar la trayectoria si tiene comandos
-                if (currentTrajectory.length > 0) {
-                    const name = prompt("Nombre para esta trayectoria:", `Trayectoria ${new Date().toLocaleString()}`);
-                    if (name) {
-                        const trajectory = {
-                            name: name,
-                            commands: currentTrajectory,
-                            createdAt: new Date().toISOString()
-                        };
-                        savedTrajectories.push(trajectory);
-                        saveTrajectories();
-                        updateTrajectoriesList();
-                    }
-                }
-            }
-        }
-
-        // Guardar trayectorias en localStorage
-        function saveTrajectories() {
-            localStorage.setItem('savedTrajectories', JSON.stringify(savedTrajectories));
-        }
-
-        // Reproducir una trayectoria
-        function playTrajectory(index) {
-            if (index >= 0 && index < savedTrajectories.length) {
-                const trajectory = savedTrajectories[index];
-                console.log(`Reproduciendo: ${trajectory.name}`);
-                
-                // Enviar la trayectoria completa al backend
-                socket.emit('execute_trajectory', trajectory.commands);
-                
-                // Mostrar estado en UI
-                updateTrajectoryStatus(`Ejecutando: ${trajectory.name}`);
-                
-                // Escuchar eventos del backend
-                socket.on('trajectory_progress', (progress) => {
-                    updateTrajectoryStatus(`Ejecutando: ${trajectory.name} (${progress.current}/${progress.total})`);
-                    
-                    if (progress.obstacle_detected) {
-                        obstacleAvoidanceMode = true;
-                        showObstacleAlert(progress.distance);
-                    } else if (obstacleAvoidanceMode) {
-                        obstacleAvoidanceMode = false;
-                        hideObstacleAlert();
-                    }
-                });
-                
-                socket.on('trajectory_complete', () => {
-                    updateTrajectoryStatus("Trayectoria completada");
-                    socket.off('trajectory_progress');
-                    socket.off('trajectory_complete');
-                });
-                socket.on('obstacle_distance', (distance) => {
-                    updateDistanceDisplay(distance);
-                });
-            }
-        }
-
-        function updateTrajectoryStatus(message) {
-            document.getElementById('trajectoryStatus').textContent = message;
-        }
-
-        function showObstacleAlert(distance) {
-            const alert = document.getElementById('obstacleAlert');
-            alert.textContent = `¡Obstáculo detectado a ${distance.toFixed(1)} cm! Evitando...`;
-            alert.style.display = 'block';
-        }
-
-        function hideObstacleAlert() {
-            document.getElementById('obstacleAlert').style.display = 'none';
-        }
-        
-        function updateDistanceDisplay(distance) {
-            const meter = document.getElementById('distanceMeter');
-            meter.value = distance;
-            meter.style.backgroundColor = distance < 45 ? '#ff6b6b' : '#4CAF50';
-        }
-
-        // Actualizar la lista en la UI
-        function updateTrajectoriesList() {
-            const list = document.getElementById('trajectoriesList');
-            list.innerHTML = savedTrajectories.map((traj, index) => `
-                <div class="trajectory-item">
-                    <span>${traj.name}</span>
-                    <button onclick="playTrajectory(${index})">▶️</button>
-                    <button onclick="deleteTrajectory(${index})">🗑️</button>
-                </div>
-            `).join('');
-        }
-
-        // Eliminar una trayectoria
-        function deleteTrajectory(index) {
-            if (confirm(`¿Eliminar "${savedTrajectories[index].name}"?`)) {
-                savedTrajectories.splice(index, 1);
-                saveTrajectories();
-                updateTrajectoriesList();
-            }
-        }
-
-        // Inicializar la lista al cargar
-        document.addEventListener('DOMContentLoaded', updateTrajectoriesList);
 
         // Function to update button states
         function updateButtonStates() {
@@ -1363,7 +1165,6 @@
             document.getElementById('status-battery').textContent = `${battery}%`;
             updateStatusDashboard();
         });
-
 
         socket.on('connect_error', (error) => {
             console.log('Connection Error:', error);

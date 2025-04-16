@@ -3,13 +3,13 @@ import logging
 import time
 import json
 from unitree_sdk2py.go2.sport.sport_client import SportClient
-#import cyclonedds
-#from cyclonedds.domain import DomainParticipant
-#from cyclonedds.sub import Subscriber
-#from cyclonedds.sub import DataReader
-#from cyclonedds.topic import Topic
-#from cyclonedds.pub import Publisher
-#from cyclonedds.pub import DataWriter
+import cyclonedds
+from cyclonedds.domain import DomainParticipant
+from cyclonedds.sub import Subscriber
+from cyclonedds.sub import DataReader
+from cyclonedds.topic import Topic
+from cyclonedds.pub import Publisher
+from cyclonedds.pub import DataWriter
 from unitree_sdk2py.idl.unitree_go.msg.dds_ import BmsState_
 from .ultrasonic import medir_distancia
 
@@ -25,14 +25,9 @@ class RobotControl:
         self.y_speed = 0
         self.yaw_speed = 0
         self.lock = threading.Lock()
-        #self.battery_percentage = None
-        self.trajectory = []  
+        self.battery_percentage = None
         self._start_bms_listener()
-        self.current_trajectory = None
-        self.trajectory_index = 0
-        self.is_executing_trajectory = False
-        self.paused_trajectory = None
-        self.obstacle_avoidance_active = False
+
 
     def initialize(self):
         try:
@@ -55,6 +50,21 @@ class RobotControl:
             self.move_thread.join()
 
     def _movement_loop(self):
+        while self.running:
+            with self.lock:
+                    x_speed = self.x_speed
+                    y_speed = self.y_speed
+                    yaw_speed = self.yaw_speed
+            try:
+                    # Always send movement commands
+                    if y_speed != 0 or x_speed != 0 or yaw_speed != 0:
+                        self.client.Move(y_speed, x_speed, yaw_speed)
+            except Exception as e:
+                    logger.error(f"Error sending Move command: {e}")
+            time.sleep(0.02)  # Sleep for 20ms
+
+
+    #def _movement_loop(self):
         while self.running:
             try:
                 distancia = medir_distancia()
@@ -82,7 +92,7 @@ class RobotControl:
             except Exception as e:
                 logger.error(f"Error en _movement_loop: {e}")
 
-    def _handle_obstacle(self):
+    #def _handle_obstacle(self):
         logger.warning(f"Obstáculo detectado. Iniciando evasión.")
         self.obstacle_avoidance_active = True
         
@@ -102,7 +112,7 @@ class RobotControl:
         self.stop_move()
         time.sleep(0.5)
 
-    def _resume_after_obstacle(self):
+    #def _resume_after_obstacle(self):
         logger.info("Obstáculo evitado. Reanudando operación normal.")
         self.obstacle_avoidance_active = False
         
@@ -115,7 +125,7 @@ class RobotControl:
             self.paused_trajectory = None
             logger.info(f"Reanudando trayectoria desde paso {self.trajectory_index}")
 
-    def _execute_trajectory_step(self):
+    #def _execute_trajectory_step(self):
         current_time = time.time()
         if current_time - self.last_step_time >= self.current_trajectory[self.trajectory_index]['t'] / 1000.0:
             cmd = self.current_trajectory[self.trajectory_index]
@@ -131,7 +141,7 @@ class RobotControl:
                 self.trajectory_index = 0
                 logger.info("Trayectoria completada")
 
-    def execute_trajectory(self, trajectory):
+    #def execute_trajectory(self, trajectory):
         if not trajectory or len(trajectory) == 0:
             return
         
@@ -141,7 +151,7 @@ class RobotControl:
         self.is_executing_trajectory = True
         self.last_step_time = time.time() 
 
-    def _adjust_trajectory_after_obstacle(self):
+    #def _adjust_trajectory_after_obstacle(self):
         if self.current_trajectory and self.trajectory_index > 0:
             # Calcular nueva posición estimada después de la evasión
             # Esto podría ser más sofisticado con odometría real
