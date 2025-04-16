@@ -5,7 +5,7 @@ import base64
 import threading
 import time
 import logging
-from models import db
+from inu_robot.models import db
 from robot_control import RobotControl
 from camera_stream import camera_config  # Only import Unitree Go2 camera config
 import sys
