@@ -3,13 +3,13 @@ import logging
 import time
 import json
 from unitree_sdk2py.go2.sport.sport_client import SportClient
-import cyclonedds
-from cyclonedds.domain import DomainParticipant
-from cyclonedds.sub import Subscriber
-from cyclonedds.sub import DataReader
-from cyclonedds.topic import Topic
-from cyclonedds.pub import Publisher
-from cyclonedds.pub import DataWriter
+#import cyclonedds
+#from cyclonedds.domain import DomainParticipant
+#from cyclonedds.sub import Subscriber
+#from cyclonedds.sub import DataReader
+#from cyclonedds.topic import Topic
+#from cyclonedds.pub import Publisher
+#from cyclonedds.pub import DataWriter
 from unitree_sdk2py.idl.unitree_go.msg.dds_ import BmsState_
 from .ultrasonic import medir_distancia
 
@@ -25,7 +25,7 @@ class RobotControl:
         self.y_speed = 0
         self.yaw_speed = 0
         self.lock = threading.Lock()
-        self.battery_percentage = None
+        #self.battery_percentage = None
         self.trajectory = []  
         self._start_bms_listener()
         self.current_trajectory = None
