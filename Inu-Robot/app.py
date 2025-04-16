@@ -8,12 +8,16 @@ import logging
 from models import db
 from robot_control import RobotControl
 from camera_stream import camera_config  # Only import Unitree Go2 camera config
+import sys
+import os
 from unitree_sdk2py.core.channel import ChannelFactoryInitialize
 from unitree_sdk2py.go2.sport.sport_client import SportClient
 import psutil
 import subprocess
 
-import sys
+# Agrega manualmente el path del paquete unitree_sdk2py
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 print("Python path:", sys.path)
 
 try:
