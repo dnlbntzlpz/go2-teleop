@@ -11,12 +11,12 @@ from cyclonedds.topic import Topic
 from cyclonedds.pub import Publisher
 from cyclonedds.pub import DataWriter
 from unitree_sdk2py.idl.unitree_go.msg.dds_ import BmsState_
-from .ultrasonic import medir_distancia
+#from .ultrasonic import medir_distancia
 
 logger = logging.getLogger(__name__)
 
 class RobotControl:
-    def __init__(self, network_interface='eth0'):
+    def __init__(self, network_interface='wlan0'):
         self.network_interface = network_interface
         self.client = None
         self.running = False

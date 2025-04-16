@@ -44,6 +44,16 @@ db.init_app(app)
 
 robot_control = None
 
+try:
+    robot_control = RobotControl(network_interface="eth0")
+    if robot_control.initialize():
+        logger.info("✅ Robot control initialized correctly")
+    else:
+        logger.warning("⚠️ Failed to initialize robot control")
+except Exception as e:
+    logger.error(f"❌ Exception during robot_control initialization: {str(e)}")
+    robot_control = None
+
 
 @app.route('/')
 def index():
