@@ -56,7 +56,6 @@ class RobotControl:
                     y_speed = self.y_speed
                     yaw_speed = self.yaw_speed
             try:
-                    # Always send movement commands
                     if y_speed != 0 or x_speed != 0 or yaw_speed != 0:
                         self.client.Move(y_speed, x_speed, yaw_speed)
             except Exception as e:
@@ -65,107 +64,107 @@ class RobotControl:
 
 
     #def _movement_loop(self):
-        while self.running:
-            try:
-                distancia = medir_distancia()
-                if distancia and distancia < 45:
-                    if not self.obstacle_avoidance_active:
-                        self._handle_obstacle()
-                else:
-                    if self.obstacle_avoidance_active:
-                        self._resume_after_obstacle()
+        #while self.running:
+       #     try:
+               # distancia = medir_distancia()
+               # if distancia and distancia < 45:
+                #    if not self.obstacle_avoidance_active:
+                 #       self._handle_obstacle()
+                #else:
+                 #   if self.obstacle_avoidance_active:
+                  #      self._resume_after_obstacle()
 
                     # Continuar con movimiento normal o trayectoria
-                    if self.is_executing_trajectory and self.current_trajectory:
-                        self._execute_trajectory_step()
-                    else:
-                        with self.lock:
-                            x_speed = self.x_speed
-                            y_speed = self.y_speed
-                            yaw_speed = self.yaw_speed
+                   # if self.is_executing_trajectory and self.current_trajectory:
+                    #    self._execute_trajectory_step()
+                   # else:
+                    #    with self.lock:
+                     #       x_speed = self.x_speed
+                      #      y_speed = self.y_speed
+                       #     yaw_speed = self.yaw_speed
                         
-                        if y_speed != 0 or x_speed != 0 or yaw_speed != 0:
-                            self.client.Move(y_speed, x_speed, yaw_speed)
-                            self._record_step(x_speed, y_speed, yaw_speed)
+                     #   if y_speed != 0 or x_speed != 0 or yaw_speed != 0:
+                      #      self.client.Move(y_speed, x_speed, yaw_speed)
+                       #     self._record_step(x_speed, y_speed, yaw_speed)
                 
-                time.sleep(0.1)
-            except Exception as e:
-                logger.error(f"Error en _movement_loop: {e}")
+               # time.sleep(0.1)
+            #except Exception as e:
+             #   logger.error(f"Error en _movement_loop: {e}")
 
     #def _handle_obstacle(self):
-        logger.warning(f"Obstáculo detectado. Iniciando evasión.")
-        self.obstacle_avoidance_active = True
+        #logger.warning(f"Obstáculo detectado. Iniciando evasión.")
+        #self.obstacle_avoidance_active = True
         
-        # Guardar estado actual si estamos en una trayectoria
-        if self.is_executing_trajectory:
-            self.paused_trajectory = {
-                'trajectory': self.current_trajectory,
-                'index': self.trajectory_index,
-                'remaining_time': self.current_trajectory[self.trajectory_index]['t'] - (time.time() - self.last_step_time)
-            }
+       
+        #if self.is_executing_trajectory:
+         #   self.paused_trajectory = {
+          #      'trajectory': self.current_trajectory,
+           #     'index': self.trajectory_index,
+            #    'remaining_time': self.current_trajectory[self.trajectory_index]['t'] - (time.time() - self.last_step_time)
+        #    }
         
-        # Realizar maniobra de evasión
-        self.stop_move()
-        time.sleep(0.5)
-        self.set_speeds(0, -0.3, 0.5)  # retrocede y gira
-        time.sleep(1.5)
-        self.stop_move()
-        time.sleep(0.5)
+        
+        #self.stop_move()
+        #time.sleep(0.5)
+        #self.set_speeds(0, -0.3, 0.5)  
+        #time.sleep(1.5)
+        #self.stop_move()
+        #time.sleep(0.5)
 
     #def _resume_after_obstacle(self):
-        logger.info("Obstáculo evitado. Reanudando operación normal.")
-        self.obstacle_avoidance_active = False
+        #logger.info("Obstáculo evitado. Reanudando operación normal.")
+        #self.obstacle_avoidance_active = False
         
-        if self.paused_trajectory:
+        #if self.paused_trajectory:
             # Reanudar trayectoria
-            self.current_trajectory = self.paused_trajectory['trajectory']
-            self.trajectory_index = self.paused_trajectory['index']
-            self.is_executing_trajectory = True
-            self.last_step_time = time.time() - (self.paused_trajectory['remaining_time'] if 'remaining_time' in self.paused_trajectory else 0)
-            self.paused_trajectory = None
-            logger.info(f"Reanudando trayectoria desde paso {self.trajectory_index}")
+         #   self.current_trajectory = self.paused_trajectory['trajectory']
+        #  self.trajectory_index = self.paused_trajectory['index']
+         #   self.is_executing_trajectory = True
+          #  self.last_step_time = time.time() - (self.paused_trajectory['remaining_time'] if 'remaining_time' in self.paused_trajectory else 0)
+           # self.paused_trajectory = None
+           # logger.info(f"Reanudando trayectoria desde paso {self.trajectory_index}")
 
     #def _execute_trajectory_step(self):
-        current_time = time.time()
-        if current_time - self.last_step_time >= self.current_trajectory[self.trajectory_index]['t'] / 1000.0:
-            cmd = self.current_trajectory[self.trajectory_index]
-            self.client.Move(cmd['y'], cmd['x'], cmd['yaw'])
+      #  current_time = time.time()
+       # if current_time - self.last_step_time >= self.current_trajectory[self.trajectory_index]['t'] / 1000.0:
+        #    cmd = self.current_trajectory[self.trajectory_index]
+         #   self.client.Move(cmd['y'], cmd['x'], cmd['yaw'])
             
-            self.trajectory_index += 1
-            self.last_step_time = current_time
+          #  self.trajectory_index += 1
+           # self.last_step_time = current_time
             
-            if self.trajectory_index >= len(self.current_trajectory):
-                self.stop_move()
-                self.is_executing_trajectory = False
-                self.current_trajectory = None
-                self.trajectory_index = 0
-                logger.info("Trayectoria completada")
+          #  if self.trajectory_index >= len(self.current_trajectory):
+           #     self.stop_move()
+            #    self.is_executing_trajectory = False
+             #   self.current_trajectory = None
+              #  self.trajectory_index = 0
+               # logger.info("Trayectoria completada")
 
     #def execute_trajectory(self, trajectory):
-        if not trajectory or len(trajectory) == 0:
-            return
+        #if not trajectory or len(trajectory) == 0:
+     #       return
         
-        logger.info(f"Iniciando ejecución de trayectoria con {len(trajectory)} pasos")
-        self.current_trajectory = trajectory
-        self.trajectory_index = 0
-        self.is_executing_trajectory = True
-        self.last_step_time = time.time() 
+      #  logger.info(f"Iniciando ejecución de trayectoria con {len(trajectory)} pasos")
+      #  self.current_trajectory = trajectory
+       # self.trajectory_index = 0
+       # self.is_executing_trajectory = True
+       # self.last_step_time = time.time() 
 
     #def _adjust_trajectory_after_obstacle(self):
-        if self.current_trajectory and self.trajectory_index > 0:
+       # if self.current_trajectory and self.trajectory_index > 0:
             # Calcular nueva posición estimada después de la evasión
             # Esto podría ser más sofisticado con odometría real
-            last_cmd = self.current_trajectory[self.trajectory_index-1]
-            adjusted_time = last_cmd['t'] + 2000  # Añadir tiempo de evasión
+        #    last_cmd = self.current_trajectory[self.trajectory_index-1]
+         #   adjusted_time = last_cmd['t'] + 2000  # Añadir tiempo de evasión
             
             # Insertar comandos de corrección
-            correction_cmd = {
-                't': adjusted_time,
-                'x': last_cmd['x'],
-                'y': last_cmd['y'],
-                'yaw': last_cmd['yaw']
-            }
-            self.current_trajectory.insert(self.trajectory_index, correction_cmd)           
+          #  correction_cmd = {
+           #     't': adjusted_time,
+            #    'x': last_cmd['x'],
+             #   'y': last_cmd['y'],
+              #  'yaw': last_cmd['yaw']
+            #}
+            #self.current_trajectory.insert(self.trajectory_index, correction_cmd)           
 
     def set_speeds(self, x_speed, y_speed, yaw_speed):
         MAX_SPEED = 1.0
