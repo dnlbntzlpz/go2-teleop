@@ -14,7 +14,7 @@ from unitree_sdk2py.idl.unitree_go.msg.dds_ import BmsState_
 logger = logging.getLogger(__name__)
 
 class RobotControl:
-    def __init__(self, network_interface='eth0'):
+    def __init__(self, network_interface='wlan0'):
         self.network_interface = network_interface
         self.client = None
         self.running = False
