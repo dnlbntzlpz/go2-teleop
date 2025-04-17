@@ -45,7 +45,7 @@ db.init_app(app)
 robot_control = None
 
 try:
-    robot_control = RobotControl(network_interface="wlan0")
+    robot_control = RobotControl(network_interface="eth0")
     if robot_control.initialize():
         logger.info("✅ Robot control initialized correctly")
     else:
@@ -251,7 +251,7 @@ if __name__ == '__main__':
     init_db()
 
     try:
-        ChannelFactoryInitialize(0, 'wlan0')
+        ChannelFactoryInitialize(0, 'eth0')
         logger.info("ChannelFactory initialized successfully.")
     except Exception as e:
         logger.error(f"ChannelFactory initialization error: {str(e)}")
