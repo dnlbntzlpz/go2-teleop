@@ -45,7 +45,7 @@ db.init_app(app)
 robot_control = None
 
 try:
-    robot_control = RobotControl(network_interface="eth0")
+    robot_control = RobotControl(network_interface="wlan0")
     if robot_control.initialize():
         logger.info("✅ Robot control initialized correctly")
     else:
@@ -251,7 +251,7 @@ if __name__ == '__main__':
     init_db()
 
     try:
-        ChannelFactoryInitialize(0, 'eth0')
+        ChannelFactoryInitialize(0, 'wlan0')
         logger.info("ChannelFactory initialized successfully.")
     except Exception as e:
         logger.error(f"ChannelFactory initialization error: {str(e)}")
@@ -260,24 +260,17 @@ if __name__ == '__main__':
     # Initialize Unitree Go2 camera
     camera_config.set_socketio(socketio)
     if camera_config.initialize():
+        logger.info("Unitree Go2 camera streaming started successfully")
         thread = threading.Thread(target=camera_config.process_frames)
         thread.daemon = True
         thread.start()
-        logger.info("Unitree Go2 camera streaming started successfully.")
     else:
-        logger.error("Failed to initialize Unitree Go2 camera.")
+       logger.error("Failed to initialize Unitree Go2 camera.")
 
     # Initialize USB camera
     usb_capture = init_usb_camera(camera_index=0)
     if usb_capture is None:
         logger.error("USB camera initialization failed.")
-
-    # Initialize robot control
-    robot_control = RobotControl(network_interface='eth0')
-    if robot_control.initialize():
-        logger.info("Robot control initialized successfully.")
-    else:
-        logger.error("Failed to initialize robot control.")
 
     # Start Flask application with Socket.IO
     app.debug = True
