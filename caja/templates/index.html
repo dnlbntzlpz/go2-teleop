@@ -1,27 +1,123 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Monitor Raspberry Pi</title>
+    <title>Raspberry Monitor</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        .cam { max-width: 90%; border-radius: 8px; box-shadow: 0 0 15px rgba(0,0,0,0.2); }
-        .data { font-size: 1.5em; margin-top: 20px; }
+        body { font-family: sans-serif; text-align: center; }
+        .cam { width: 80%; max-width: 640px; }
+        canvas { max-width: 600px; margin-top: 30px; }
+        .alerta {
+            margin-top: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .ok { color: green; }
+        .warning { color: orange; }
+        .danger { color: red; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Transmisión + DHT11</h1>
+    <img src="{{ url_for('video_feed') }}" class="cam">
+
+    <h2>Datos en Tiempo Real</h2>
+    <p id="datos"></p>
+    <div id="alerta-temperatura" class="alerta"></div>
+    <div id="alerta-humedad" class="alerta"></div>
+
+    <canvas id="grafica"></canvas>
+
     <script>
+        const ctx = document.getElementById('grafica').getContext('2d');
+        const data = {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Temperatura (°C)',
+                    data: [],
+                    borderColor: 'red',
+                    fill: false
+                },
+                {
+                    label: 'Humedad (%)',
+                    data: [],
+                    borderColor: 'blue',
+                    fill: false
+                }
+            ]
+        };
+
+        const config = {
+            type: 'line',
+            data: data,
+            options: {
+                scales: {
+                    x: { title: { display: true, text: 'Tiempo (s)' } },
+                    y: { beginAtZero: true }
+                }
+            }
+        };
+
+        const grafica = new Chart(ctx, config);
+        let tiempo = 0;
+
         setInterval(() => {
             fetch('/dht')
-                .then(res => res.text())
-                .then(text => {
-                    document.getElementById("dht-data").innerText = text;
+                .then(res => res.json())
+                .then(({ temperatura, humedad }) => {
+                    document.getElementById("datos").innerText = `Temp: ${temperatura} °C | Hum: ${humedad} %`;
+
+                    // ALERTAS
+                    const alertaTemp = document.getElementById("alerta-temperatura");
+                    const alertaHum = document.getElementById("alerta-humedad");
+                    const sonidoTemp = document.getElementById("sonido-temp");
+                    const sonidoHum = document.getElementById("sonido-hum");
+
+                    if (temperatura > 30 || humedad > 70) {
+                        sonido.play();
+                    }
+
+                    if (temperatura > 30) {
+                        alertaTemp.innerText = `⚠️ Temperatura elevada: ${temperatura} °C`;
+                        alertaTemp.className = 'alerta danger';
+                        sonidoTemp.play();
+                    } else if (temperatura > 26) {
+                        alertaTemp.innerText = `⚠ Temperatura cálida: ${temperatura} °C`;
+                        alertaTemp.className = 'alerta warning';
+                    } else {
+                        alertaTemp.innerText = `✔ Temperatura normal`;
+                        alertaTemp.className = 'alerta ok';
+                    }
+
+                    if (humedad > 70) {
+                        alertaHum.innerText = `⚠️ Humedad alta: ${humedad} %`;
+                        alertaHum.className = 'alerta danger';
+                        sonidoHum.play();
+                    } else if (humedad < 30) {
+                        alertaHum.innerText = `⚠ Humedad baja: ${humedad} %`;
+                        alertaHum.className = 'alerta warning';
+                        sonidoHum.play();
+                    } else {
+                        alertaHum.innerText = `✔ Humedad estable`;
+                        alertaHum.className = 'alerta ok';
+                    }
+
+                    // ACTUALIZAR GRÁFICA
+                    if (data.labels.length > 30) {
+                        data.labels.shift();
+                        data.datasets[0].data.shift();
+                        data.datasets[1].data.shift();
+                    }
+
+                    data.labels.push(tiempo++);
+                    data.datasets[0].data.push(temperatura);
+                    data.datasets[1].data.push(humedad);
+                    grafica.update();
                 });
         }, 2000);
     </script>
-</head>
-<body>
-    <h1>Transmisión en Vivo + DHT11</h1>
-    <img src="{{ url_for('video_feed') }}" class="cam">
-    <div class="data">
-        Temperatura y Humedad: <span id="dht-data">{{ temperatura }}°C | {{ humedad }}%</span>
-    </div>
+    <audio id="sonido-temp" src="{{ url_for('static', filename='sounds/alerta_temp.mp3') }}"></audio>
+    <audio id="sonido-hum" src="{{ url_for('static', filename='sounds/alerta_hum.mp3') }}"></audio>
 </body>
 </html>

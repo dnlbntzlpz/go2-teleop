@@ -3,7 +3,7 @@ import time
 
 # Tipo de sensor y pin de datos
 sensor = Adafruit_DHT.DHT11
-pin = 4  # GPIO 4
+pin = 4  # GPIO 26
 
 print("Iniciando lectura del DHT11...")
 

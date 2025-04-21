@@ -1,4 +1,4 @@
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response, jsonify
 import cv2
 import Adafruit_DHT
 import threading
@@ -36,15 +36,15 @@ def gen_frames():
         success, frame = cam.read()
         if not success:
             break
-        ret, buffer = cv2.imencode('.jpg', frame)
-        frame = buffer.tobytes()
+        _, buffer = cv2.imencode('.jpg', frame)
         yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+               b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
 
 # Ruta principal
 @app.route('/')
 def index():
-    return render_template('index.html', temperatura=temperatura, humedad=humedad)
+    return render_template('index.html')
+
 
 # Ruta del video
 @app.route('/video_feed')
@@ -54,7 +54,7 @@ def video_feed():
 # Refrescar solo datos del DHT11 (AJAX)
 @app.route('/dht')
 def dht():
-    return f"{temperatura:.1f}°C | {humedad:.1f}%"
+    return jsonify(dht_data)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
