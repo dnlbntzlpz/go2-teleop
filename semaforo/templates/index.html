@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Semáforos</title>
+    <style>
+        h1 { color: #333; }
+        #alerta {
+            font-size: 24px;
+            font-weight: bold;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Detección de Semáforos</h1>
+    <div id="alerta">Cargando...</div>
+    <img src="{{ url_for('video_feed') }}" width="720" />
+
+    <script>
+        setInterval(() => {
+            fetch("/alerta")
+                .then(res => res.text())
+                .then(txt => {
+                    const alertaDiv = document.getElementById("alerta");
+                    alertaDiv.innerText = txt;
+
+                    if (txt.includes("verde")) alertaDiv.style.color = "green";
+                    else if (txt.includes("amarilla")) alertaDiv.style.color = "orange";
+                    else alertaDiv.style.color = "red";
+                });
+        }, 1000);
+    </script>
+</body>
+</html>
