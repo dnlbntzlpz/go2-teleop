@@ -1,12 +1,18 @@
 import time
 import board
+import busio
 import adafruit_stts22h
-# Inicializar bus I2C
-i2c = board.I2C()  # usa los pines SDA y SCL por defecto en Raspberry Pi
-# Inicializar sensor STTS22H
-sensor = adafruit_stts22h.STTS22(i2c)
-# Opcional: configurar modo de operación (puede ser 'low', 'normal', 'high')
-sensor.low_power = False  # False = modo normal
+i2c = busio.I2C(board.SCL, board.SDA)
+while not i2c.try_lock():
+    pass
+print("Iniciando sensor...")
+try:
+    sensor = adafruit_stts22h.STTS22(i2c)
+    print("Sensor inicializado correctamente")
+except Exception as e:
+    print(f"Error al inicializar el sensor: {e}")
+    exit()
+sensor.low_power = False  # Modo normal
 def read_stts22h():
     try:
         temperature = sensor.temperature
@@ -14,7 +20,7 @@ def read_stts22h():
     except Exception as e:
         print(f"Error al leer el sensor: {e}")
         return {'temperature': None}
-# Ejemplo de uso en tiempo real
+print("Iniciando lectura...")
 while True:
     data = read_stts22h()
     print(f"Temperatura: {data['temperature']} °C")
