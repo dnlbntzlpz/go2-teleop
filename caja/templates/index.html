@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Monitor Raspberry Pi</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        .cam { max-width: 90%; border-radius: 8px; box-shadow: 0 0 15px rgba(0,0,0,0.2); }
+        .data { font-size: 1.5em; margin-top: 20px; }
+    </style>
+    <script>
+        setInterval(() => {
+            fetch('/dht')
+                .then(res => res.text())
+                .then(text => {
+                    document.getElementById("dht-data").innerText = text;
+                });
+        }, 2000);
+    </script>
+</head>
+<body>
+    <h1>Transmisión en Vivo + DHT11</h1>
+    <img src="{{ url_for('video_feed') }}" class="cam">
+    <div class="data">
+        Temperatura y Humedad: <span id="dht-data">{{ temperatura }}°C | {{ humedad }}%</span>
+    </div>
+</body>
+</html>

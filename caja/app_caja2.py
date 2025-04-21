@@ -11,21 +11,20 @@ app = Flask(__name__)
 sensor = Adafruit_DHT.DHT11
 dht_pin = 4
 
-# Variables globales para almacenar temperatura y humedad
-temperatura = 0.0
-humedad = 0.0
+# Datos compartidos
+dht_data = {"temperatura": 0.0, "humedad": 0.0}
+
 
 # Captura de cámara
 cam = cv2.VideoCapture(0)
 
 # Función para leer el DHT11 en segundo plano
 def leer_dht():
-    global temperatura, humedad
     while True:
         h, t = Adafruit_DHT.read_retry(sensor, dht_pin)
         if h is not None and t is not None:
-            humedad = h
-            temperatura = t
+            dht_data["temperatura"] = t
+            dht_data["humedad"] = h
         time.sleep(2)
 
 # Inicia hilo para lectura continua del DHT11
@@ -45,7 +44,7 @@ def gen_frames():
 # Ruta principal
 @app.route('/')
 def index():
-    return render_template('index2.html', temperatura=temperatura, humedad=humedad)
+    return render_template('index.html', temperatura=temperatura, humedad=humedad)
 
 # Ruta del video
 @app.route('/video_feed')
