@@ -17,12 +17,28 @@
     <img src="{{ url_for('video_feed') }}" width="720" />
 
     <script>
+        let alertaAnterior = "";
+
+        function hablar(texto) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(texto);
+                utterance.lang = 'es-ES';  // Puedes cambiar a 'en-US' si quieres inglés
+                window.speechSynthesis.cancel(); // Detiene cualquier voz anterior
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
         setInterval(() => {
             fetch("/alerta")
                 .then(res => res.text())
                 .then(txt => {
                     const alertaDiv = document.getElementById("alerta");
                     alertaDiv.innerText = txt;
+
+                    if (txt !== alertaAnterior && txt.length > 3) {
+                        alertaAnterior = txt;
+                        hablar(txt);  // 🚀 Reproduce en el navegador
+                    }
 
                     if (txt.includes("verde")) alertaDiv.style.color = "green";
                     else if (txt.includes("amarilla")) alertaDiv.style.color = "orange";
